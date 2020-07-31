@@ -1,14 +1,16 @@
 <?php
 
+namespace ilateral\SimpleBookings\Helpers;
 
-/**
- * Config class for this module to hold global settings.
- *
- * @package SimpleBookings
- * @author  ilateral (http://ilateralweb.co.uk)
- */
-class SimpleBookings extends ViewableData
+use SilverStripe\ORM\DB;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injectable;
+use ilateral\SimpleBookings\Model\BookableProduct;
+use ilateral\SimpleBookings\Model\ResourceAllocation;
+
+class BookingHelper
 {
+    use Configurable, Injectable;
 
     /**
      * Do BookableProducts lock the shopping cart (so
@@ -28,24 +30,6 @@ class SimpleBookings extends ViewableData
      * @config 
      */
     private static $allow_delivery = false;
-
-    /**
-     * Provy for createDateRangeArray() for backwards compatibility
-     *
-     * @param string $date_from The starting date
-     * @param string $date_to   The end date
-     * @param int    $interval  Time period (seconds) to use to make the array
-     *
-     * @return array
-     */
-    public static function create_date_range_array($date_from, $date_to, $interval)
-    {
-        Deprecation::notice(
-            "0.5.0",
-            "Please use SimpleBookings::createDateRangeArray()"
-        );
-        return self::createDateRangeArray($date_from, $date_to, $interval);
-    }
 
     /**
      * Takes two dates formatted as YYYY-MM-DD and creates an inclusive
@@ -74,24 +58,6 @@ class SimpleBookings extends ViewableData
         }
 
         return $range;
-    }
-
-    /**
-     * Proxy for getTotalSpaces until it is depreciated
-     * 
-     * @param string $date_from The starting date
-     * @param string $date_to   The end date
-     * @param int    $ID        The ID of the product we are trying to book
-     * 
-     * @return int
-     */
-    public static function get_total_booked_spaces($date_from, $date_to, $ID)
-    {
-        Deprecation::notice(
-            "0.5.0",
-            "Please use SimpleBookings::getTotalBookedSpaces()"
-        );
-        return self::getTotalBookedSpaces($date_from, $date_to, $ID);
     }
 
     /**
