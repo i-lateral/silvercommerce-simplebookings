@@ -1,7 +1,7 @@
 {
   "name": "i-lateral/silvercommerce-simplebookings",
   "description": "Module for Silverstripe 4/SilverCommerce that adds simple booking functionality",
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "homepage": "http://github.com/i-lateral/silvercommerce-simplebookings",
     "keywords": ["silverstripe", "commerce", "ecommerce", "booking"],
     "license": "BSD-3-Clause",
