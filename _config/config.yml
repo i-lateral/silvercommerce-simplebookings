@@ -1,15 +1,11 @@
 ---
 Name: simplebookingconfig
 ---
-# Custom admin CSS
-LeftAndMain:
-  extra_requirements_css:
-    - commerce-simplebookings/css/admin.css
 
 # Extensions
-ShoppingCart:
+SilverCommerce\OrdersAdmin\Model\Invoice:
   extensions:
-    - SimpleBookingShoppingCartExtension
-Order:
+    - ilateral\SimpleBookings\Extensions\InvoiceExtension
+SilverCommerce\OrdersAdmin\Model\LineItem:
   extensions:
-    - SimpleBookingOrderExtension
+    - ilateral\SimpleBookings\Extensions\LineItemExtension
