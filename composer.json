@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ilateral\\SimpleBookings\\Model\\": "src/"
+            "ilateral\\SimpleBookings\\": "src/"
         }
     },
     "minimum-stability": "dev"
