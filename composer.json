@@ -1,8 +1,8 @@
 {
-  "name": "i-lateral/silverstripe-commerce-simplebookings",
-  "description": "Silverstripe module that adds simple booking functionality to the commerce system",
+  "name": "i-lateral/silvercommerce-simplebookings",
+  "description": "Module for Silverstripe 4/SilverCommerce that adds simple booking functionality",
     "type": "silverstripe-module",
-    "homepage": "http://github.com/i-lateral/silverstripe-commerce-simplebookings",
+    "homepage": "http://github.com/i-lateral/silvercommerce-simplebookings",
     "keywords": ["silverstripe", "commerce", "ecommerce", "booking"],
     "license": "BSD-3-Clause",
     "authors": [
@@ -12,20 +12,17 @@
         }
     ],
     "support": {
-        "issues": "http://github.com/i-lateral/silverstripe-commerce-simplebookings/issues"
+        "issues": "http://github.com/i-lateral/silvercommerce-simplebookings/issues"
     },
     "require": {
-        "silverstripe/framework": ">=3.1",
-        "i-lateral/silverstripe-commerce": "3.0.*@dev",
-        "i-lateral/silverstripe-gridfield-addons": "^1",
-        "briceburg/silverstripe-pickerfield":"*",
-        "i-lateral/silverstripe-calendarfield": ">=0.4"
+        "silverstripe/framework": "~4.0",
+        "silvercommerce/catalogue-admin": "~1.3",
+        "silvercommerce/orders-admin": ">=1.3.10"
     },
-    "suggest": {
-        "silverstripe/cms": "Add full content management support to your site",
-        "i-lateral/silverstripe-siteconfig": "Add site settings support"
+    "autoload": {
+        "psr-4": {
+            "ilateral\\SimpleBookings\\Model\\": "src/"
+        }
     },
-    "extra": {
-        "installer-name": "commerce-simplebookings"
-    }
+    "minimum-stability": "dev"
 }
