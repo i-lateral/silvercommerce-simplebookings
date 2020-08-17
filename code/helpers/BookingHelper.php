@@ -2,11 +2,17 @@
 
 namespace ilateral\SimpleBookings\Helpers;
 
+use DateTime;
 use SilverStripe\ORM\DB;
+use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use ilateral\SimpleBookings\Interfaces\Bookable;
 use ilateral\SimpleBookings\Model\BookableProduct;
+use ilateral\SimpleBookings\Model\Booking;
 use ilateral\SimpleBookings\Model\ResourceAllocation;
+use LogicException;
+use SilverCommerce\CatalogueAdmin\Model\CatalogueProduct;
 
 class BookingHelper
 {
@@ -30,6 +36,94 @@ class BookingHelper
      * @config 
      */
     private static $allow_delivery = false;
+
+    /**
+     * Start date used for filtering
+     *
+     * @var string
+     */
+    protected $start_date;
+
+    /**
+     * End date used for filtering
+     *
+     * @var string
+     */
+    protected $end_date;
+
+    /**
+     * Product to check for bookings
+     *
+     * @var CatalogueProduct
+     */
+    protected $product;
+
+    /**
+     * Get an array of product classnames that implement bookable
+     *
+     * @return array
+     */
+    public static function getBookableProductClasses()
+    {
+        return ClassInfo::implementorsOf(Bookable::class);
+    }
+
+    public function __construct(string $start, string $end, CatalogueProduct $product)
+    {
+        $this->setStartDate($start);
+        $this->setEndDate($end);
+        $this->setProduct($product);
+    }
+
+    /**
+     * Get a list of bookings within the time range
+     *
+     * @return \SilverStripe\ORM\DataList
+     */
+    public function getBookings()
+    {
+        $bookings = Booking::get()
+            ->filter("Item.StockID", $this->getProduct()->StockID)
+            ->where($this->getWhereFilter());
+
+        return $bookings;
+    }
+
+    /**
+     * Get a list of Resource Allocations within the time range
+     *
+     * @return \SilverStripe\ORM\DataList
+     */
+    public function getResourceAllocations()
+    {
+        return ResourceAllocation::get()->where($this->getWhereFilter(false));
+    }
+
+    /**
+     * Generate filter used to generate a where statement
+     *
+     * @param string $start_field     Custom name for the start field
+     * @param string $end_field       Custom name for the end field
+     *
+     * @return array
+     */
+    public function getWhereFilter($start_field = 'Start', $end_field = 'End')
+    {
+        $db = DB::get_conn();
+        $sql_format = "%Y-%m-%d";
+        $date_format = 'Y-m-d';
+        $start_field = $db->formattedDatetimeClause($start_field, $sql_format);
+        $end_field = $db->formattedDatetimeClause($end_field, $sql_format);
+        $date_from = $this->getStartDateObject();
+        $date_to = $this->getEndDateObject();
+
+        return [
+            $start_field . ' <= ?' =>  $date_to->format($date_format),
+            $start_field . ' >= ?' =>  $date_from->format($date_format),
+            $end_field . ' >= ?' =>  $date_from->format($date_format),
+            $end_field . ' <= ?' =>  $date_to->format($date_format)
+        ];
+    }
 
     /**
      * Takes two dates formatted as YYYY-MM-DD and creates an inclusive
@@ -61,108 +155,150 @@ class BookingHelper
     }
 
     /**
-     * Find the total spaces already booked between the two provided dates.
-     *
-     * @param string $date_from The starting date
-     * @param string $date_to   The end date
-     * @param int    $ID        The ID of the product we are trying to book
+     * Find the total spaces already booked between the defined dates
+     * for the selected product.
      * 
      * @return int
      */
-    public static function getTotalBookedSpaces($date_from, $date_to, $ID)
+    public function getTotalBookedSpaces()
     {
-        $db = DB::get_conn();
-
-        // First get a list of days between the start and end date
+        // Get all products inside these bookings that
+        // match our date range and tally the results
+        $bookings = $this->getBookings();
         $total_places = 0;
-        $product = BookableProduct::get()->byID($ID);
-        
-        $format = "%Y-%m-%d";
 
-        $start_field = $db->formattedDatetimeClause(
-            'Start',
-            $format
-        );
-        $end_field = $db->formattedDatetimeClause(
-            'End',
-            $format
-        );
+        foreach ($bookings as $booking) {
+            $total_places += $booking->PlacesBooked;
+        }
 
-        $date_filter = [
-            $start_field . ' <= ?' =>  $date_to,
-            $start_field . ' >= ?' =>  $date_from,
-            $end_field . ' >= ?' =>  $date_from,
-            $end_field . ' <= ?' =>  $date_to,
-            "ProductID" => $ID
-        ];
+        /*// Now get all allocations and update
+        $allocations = $this->getResourceAllocations();
+        $all_allocated = false;
 
-        if ($product) {
-            // Get all bookings with a start date within
-            // the date range
-            $bookings = BookingResource::get()->where(
-                $date_filter
-            );
-            
-            // Now get all products inside these bookings that
-            // match our date range and tally the results
-            foreach ($bookings as $match_product) {
-                $start_stamp = strtotime($date_from);
-                $end_stamp = strtotime($date_to);
-                $prod_start_stamp = strtotime($match_product->Start);
-                $prod_end_stamp = strtotime($match_product->End);
-
-                if ($prod_start_stamp >= $start_stamp && $prod_start_stamp <= $end_stamp 
-                    || $prod_start_stamp <= $start_stamp && $prod_end_stamp >= $end_stamp 
-                    || $prod_end_stamp >= $start_stamp && $prod_end_stamp <= $end_stamp
-                ) {
-                    $total_places += $match_product->BookedQTY;
-                }
+        foreach ($allocations as $allocation) {
+            if ($allocation->AllocateAll) {
+                $all_allocated = true;
             }
 
-            $date_filter = [
-                $start_field . ' <= ?' =>  $date_to,
-                $start_field . ' >= ?' =>  $date_from,
-                $end_field . ' >= ?' =>  $date_from,
-                $end_field . ' <= ?' =>  $date_to
-            ];
+            $resources = $allocation->Resources()->Filter('ID', $ID);
+            
+            foreach ($resources as $product) {
+                if ($all_allocated || $product->AllocateAll) {
+                    $total_places += $product->AvailablePlaces;
+                } else {
+                    $start_stamp = strtotime($date_from);
+                    $end_stamp = strtotime($date_to);
+                    $alloc_start_stamp = strtotime($allocation->Start);
+                    $alloc_end_stamp = strtotime($allocation->End);
 
-            // Get all bookings with a start date within
-            // the date range
-            $allocations = ResourceAllocation::get()->where($date_filter);
-
-            $all_allocated = false;
-
-            foreach ($allocations as $allocation) {
-                if ($allocation->AllocateAll) {
-                    $all_allocated = true;
-                }
-
-                $resources = $allocation->Resources()->Filter('ID', $ID);
-                
-                foreach ($resources as $product) {
-                    if ($all_allocated || $product->AllocateAll) {
-                        $total_places += $product->AvailablePlaces;
-                    } else {
-                        $start_stamp = strtotime($date_from);
-                        $end_stamp = strtotime($date_to);
-                        $alloc_start_stamp = strtotime($allocation->Start);
-                        $alloc_end_stamp = strtotime($allocation->End);
-
-                        if ($alloc_start_stamp >= $start_stamp && $alloc_start_stamp <= $end_stamp 
-                            || $alloc_start_stamp <= $start_stamp && $alloc_end_stamp >= $end_stamp 
-                            || $alloc_end_stamp >= $start_stamp && $alloc_end_stamp <= $end_stamp
-                        ) {
-                            if ($product->Increase) {
-                                $total_places -= $product->Quantity;
-                            } else {
-                                $total_places += $product->Quantity;
-                            }
+                    if ($alloc_start_stamp >= $start_stamp && $alloc_start_stamp <= $end_stamp 
+                        || $alloc_start_stamp <= $start_stamp && $alloc_end_stamp >= $end_stamp 
+                        || $alloc_end_stamp >= $start_stamp && $alloc_end_stamp <= $end_stamp
+                    ) {
+                        if ($product->Increase) {
+                            $total_places -= $product->Quantity;
+                        } else {
+                            $total_places += $product->Quantity;
                         }
                     }
                 }
             }
-        }
+        }*/
 
         return $total_places;
+    }
+
+    /**
+     * Get start date as a datetime object
+     *
+     * @return DateTime
+     */ 
+    public function getStartDate()
+    {
+        return $this->start_date;
+    }
+
+    /**
+     * Get start date as a datetime object
+     *
+     * @return DateTime
+     */ 
+    public function getStartDateObject()
+    {
+        return new DateTime($this->start_date);
+    }
+
+    /**
+     * Set start date used for filtering
+     *
+     * @param string $start_date Start date used for filtering
+     *
+     * @return self
+     */ 
+    public function setStartDate(string $start_date)
+    {
+        $this->start_date = $start_date;
+        return $this;
+    }
+
+    /**
+     * Get end date
+     *
+     * @return string
+     */ 
+    public function getEndDate()
+    {
+        return $this->end_date;
+    }
+
+    /**
+     * Get end date as a datetime object
+     *
+     * @return DateTime
+     */ 
+    public function getEndDateObject()
+    {
+        return new DateTime($this->end_date);
+    }
+
+    /**
+     * Set end date used for filtering
+     *
+     * @param string $end_date End date used for filtering
+     *
+     * @return self
+     */ 
+    public function setEndDate(string $end_date)
+    {
+        $this->end_date = $end_date;
+        return $this;
+    }
+
+    /**
+     * Get product to check for bookings
+     *
+     * @return CatalogueProduct
+     */ 
+    public function getProduct()
+    {
+        return $this->product;
+    }
+
+    /**
+     * Set product to check for bookings
+     *
+     * @param CatalogueProduct  $product  Product to check for bookings
+     *
+     * @return self
+     */ 
+    public function setProduct(CatalogueProduct $product)
+    {
+        // If this product isn't an allowed type, flag an exception
+        if (!in_array($product->ClassName, self::getBookableProductClasses())) {
+            throw new LogicException('Product must implement "Bookable"');
+        }
+
+        $this->product = $product;
+        return $this;
     }
 }
