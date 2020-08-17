@@ -1,86 +1,166 @@
 <?php
 
-use ilateral\SimpleBookings\Helpers\Syncroniser;
+namespace ilateral\SimpleBookings\Model;
+
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Member;
+use SilverStripe\Control\Controller;
+use SilverStripe\Security\Permission;
+use SilverCommerce\OrdersAdmin\Model\Invoice;
+use SilverStripe\Security\PermissionProvider;
+use ilateral\SimpleBookings\Admin\BookingAdmin;
+use ilateral\SimpleBookings\Helpers\BookingHelper;
+use SilverCommerce\CatalogueAdmin\Model\CatalogueProduct;
+use SilverCommerce\ContactAdmin\Model\Contact;
+use SilverCommerce\OrdersAdmin\Admin\OrderAdmin;
+use SilverCommerce\OrdersAdmin\Model\LineItem;
+use SilverStripe\Security\Security;
 
 /**
- * A single booking that can contain multiple "resources". Each resource is linked to
- * a "BookableProduct" and has a start and end date.
- * 
- * @category SilverstripeModule
- * @package  SimpleBookings
- * @author   ilateral <info@ilateral.co.uk>
- * @license  https://spdx.org/licenses/BSD-3-Clause.html BSD-3-Clause
- * @link     https://github.com/i-lateral/silverstripe-commerce-simplebookings
+ * A single booking that is linked to an invoice. Each lineitem on the Invoice constitutes a resource on this booking
+ *
+ * @method LineItem Item
  */
 class Booking extends DataObject implements PermissionProvider
 {
+    private static $table_name = "SimpleBookings_Booking";
+
+    private static $statuses = [
+        'pending'   => 'Pending',
+        'confirmed' => 'Confirmed',
+        'cancelled' => 'Cancelled'
+    ];
+
+    private static $pending_status = 'pending';
+
+    private static $confirmed_status = 'confirmed';
+
+    private static $cancelled_status = 'cancelled';
+
+    private static $db = [
+        'Status' => 'Varchar',
+        'Start' => 'Datetime',
+        'End'   => 'Datetime'
+    ];
+
+    private static $has_one = [
+        'Customer' => Contact::class,
+        'Item' => LineItem::class
+    ];
+
+    private static $casting = [
+        'Start'         => 'Datetime',
+        'End'           => 'Datetime',
+        'PlacesBooked'  => 'Int',
+        'Overbooked'    => 'Boolean',
+        'TotalCost'     => 'Currency'
+    ];
+
+    private static $field_labels = [
+        'Start'         => 'Start Date/Time',
+        'Invoice.FirstName' => 'First Name',
+        'Invoice.Surname'   => 'Surname',
+        'Invoice.Email'     => 'Email',
+        'Invoice.FullRef'   => 'Invoice Ref'
+    ];
+
+    private static $summary_fields = [
+        'ID',
+        'Start',
+        'End',
+        'Title',
+        'Invoice.FirstName',
+        'Invoice.Surname',
+        'Invoice.Email',
+        'Invoice.FullRef'
+    ];
+
+    private static $defaults = [
+        "Status"      => 'pending'
+    ];
 
     /**
-     * DB/Casted fields that will be synced to/from an order on write.
-     * This is an array, where keys are the booking fields and values
-     * are the order fields 
-     * 
-     * @var array
-     */
-    private static $fields_to_sync = array(
-        "FirstName" => "FirstName",
-        "Surname" => "Surname",
-        "Email" => "Email",
-        "PhoneNumber" => "PhoneNumber"
-    );
-
-    private static $db = array(
-        "Start"         => "SS_Datetime",
-        "End"           => "SS_Datetime",
-        "FirstName"     => "Varchar(255)",
-        "Surname"       => "Varchar(255)",
-        "Email"         => "Varchar(255)",
-        "PhoneNumber"   => "Varchar(255)",
-        "PartySize"     => "Int",
-        "DisableSync"   => "Boolean"
-    );
-
-    private static $has_one = array(
-        "Order"     => "Order",
-        "Customer"  => "Member"
-    );
-
-    private static $has_many = array(
-        "Resources" => "BookingResource"
-    );
-
-    private static $casting = array(
-        "Overbooked"    => "Boolean",
-        "ProductsHTML"  => "HTMLText",
-        "TotalCost"     => "Currency"
-    );
-
-    private static $field_labels = array(
-        "Start"         => "Start Date/Time",
-        "DisableSync"   => "Disable automatic order sync"
-    );
-
-    private static $summary_fields = array(
-        "ID"                => "ID",
-        "Start"             => "Start",
-        "End"               => "End",
-        "ProductsHTML"      => "Products",
-        "FirstName"         => "First Name",
-        "Surname"           => "Surname",
-        "Email"             => "Email",
-        "Order.OrderNumber" => "Order"
-    );
-
-    /**
-     * Default sord order of records from the DB
+     * Use the base title for the original bookable product
      *
-     * @var    array
-     * @config
+     * @return string
      */
-    private static $default_sort = array(
-        "Start" => "DESC",
-        "End"   => "DESC"
-    );
+    public function getTitle()
+    {
+        return $this->getBaseProduct()->Title;
+    }
+
+    /**
+     * Mark this booking pending
+     *
+     * @return self
+     */
+    public function markPending()
+    {
+        $status = $this->config()->pending_status;
+        $this->Status = $status;
+        return $this;
+    }
+
+    /**
+     * Mark this booking as confirmed
+     *
+     * @return self
+     */
+    public function markConfirmed()
+    {
+        $status = $this->config()->confirmed_status;
+        $this->Status = $status;
+        return $this;
+    }
+
+    /**
+     * Mark this booking as cancelled
+     *
+     * @return self
+     */
+    public function markCancelled()
+    {
+        $status = $this->config()->cancelled_status;
+        $this->Status = $status;
+        return $this;
+    }
+
+    /**
+     * Get the base invoice from the underlying line item
+     *
+     * @return Invoice
+     */
+    public function getInvoice()
+    {
+        return $this->Item()->Parent();
+    }
+
+    /**
+     * Find the number of places booked (based on quantity)
+     *
+     * @return int
+     */
+    public function getPlacesBooked()
+    {
+        return $this->Item()->Quantity;
+    }
+
+    /**
+     * Get the product this booking was made against
+     *
+     * @return CatalogueProduct
+     */
+    public function getBaseProduct()
+    {
+        $product = $this->Item()->FindStockItem();
+
+        if (empty($product)) {
+            $product = CatalogueProduct::create();
+            $product->ID = -1;
+        }
+
+        return $product;
+    }
 
     /**
      * Link to view this item in the CMS
@@ -102,7 +182,6 @@ class Booking extends DataObject implements PermissionProvider
         );
     }
 
-
     /**
      * Link to view this item's order in the CMS
      *
@@ -110,67 +189,22 @@ class Booking extends DataObject implements PermissionProvider
      */
     public function CMSOrderLink()
     {
-        if ($this->Order()->exists()) {
-            $order = $this->Order();
+        $invoice = $this->getInvoice();
+        if ($invoice->exists()) {
             return Controller::join_links(
                 "admin",
                 OrderAdmin::config()->url_segment,
-                $order->ClassName,
+                $invoice->ClassName,
                 "EditForm",
                 "field",
-                $order->ClassName,
+                $invoice->ClassName,
                 "item",
-                $order->ID,
+                $invoice->ID,
                 "view"
             );
         }
 
         return "";
-    }
-
-    /**
-     * Get a list fo products for this booking
-     * 
-     * @return ArrayList
-     */
-    public function getProducts()
-    {
-        $products = ArrayList::create();
-
-        foreach ($this->Resources() as $resource) {
-            $product = BookableProduct::get()->byID($resource->ProductID);
-
-            if (isset($product)) {
-                $products->add($product);
-            }
-        }
-
-        return $products;
-    }
-
-    /**
-     * Get a list of products associated with this booking as a HTML UL>LI
-     * 
-     * @return HTMLText
-     */
-    public function getProductsHTML()
-    {
-        $html = "<ul>";
-
-        foreach ($this->Resources() as $resource) {
-            $product = $resource->Product();
-
-            if ($product->exists()) {
-                $html .= "<li>{$product->Title}: {$resource->BookedQTY}</li>";
-            }
-        }
-
-        $html .= "</ul>";
-
-        $obj = HTMLText::create("ProductsHTML");
-        $obj->setValue($html);
-
-        return $obj;
     }
 
     /**
@@ -180,13 +214,20 @@ class Booking extends DataObject implements PermissionProvider
      */
     public function getOverBooked()
     {
+        $helper = BookingHelper::create($this->Start, $this->End, $this->getBaseProduct());
         $overbooked = false;
+        $booked_spaces = $helper->getTotalBookedSpaces();
 
-        foreach ($this->Resources() as $product) {
+        // First get the number of places available for this booking
+
+        // Then get the currently booked resources for this booking
+
+        // Finaly tot up the numbers
+        /*foreach ($this->Resources() as $product) {
             if ($product->getPlacesRemaining($product->Start, $product->End) < 0) {
                 $overbooked = true;
             }
-        }
+        }*/
 
         return $overbooked;
     }
@@ -199,13 +240,7 @@ class Booking extends DataObject implements PermissionProvider
      */
     public function getTotalCost()
     {
-        $order = $this->Order();
-
-        if ($order->exists()) {
-            return $order->obj("Total")->getValue();
-        }
-
-        return 0;
+        return $this->getInvoice()->getTotal();
     }
 
     /**
@@ -229,29 +264,6 @@ class Booking extends DataObject implements PermissionProvider
     }
 
     /**
-     * Update the end date to be based on the latest end date
-     * 
-     * @return void
-     */
-    public function updateEndDate()
-    {
-        $end = new DateTime($this->Start);
-        $flag = false;
-
-        foreach ($this->Resources() as $resource) {
-            $new_end = new DateTime($resource->End);
-
-            if ($new_end > $end) {
-                $end = $new_end;
-                $flag = true;
-            }
-        }
-
-        $this->End = $end->format("Y-m-d H:i:s");
-        return $flag;
-    }
-
-    /**
      * {@inheritdoc}
      * 
      * @return FieldList
@@ -261,129 +273,6 @@ class Booking extends DataObject implements PermissionProvider
         $self = $this;
         $this->beforeUpdateCMSFields(
             function ($fields) use ($self) {
-                $fields->removeByName("End");
-                $fields->removeByName("CustomerID");
-
-                // Hide Order Field
-                $fields->replaceField(
-                    "OrderID",
-                    HiddenField::create("OrderID")
-                );
-
-                // Setup calendars on date fields
-                $start_field = $fields->dataFieldByName("Start");
-
-                if ($start_field) {
-                    $start_field
-                        ->getDateField()
-                        ->setConfig("showcalendar", true);
-                }
-
-                // Add editable fields to manage quantity
-                $resources_field = $fields->dataFieldByName("Resources");
-
-                if ($resources_field) {
-                    $config = $resources_field->getConfig();
-                    
-                    $alerts = array(
-                        'PlacesRemaining' => array(
-                            'comparator' => 'less',
-                            'patterns' => array(
-                                '0' => array(
-                                    'status' => 'alert',
-                                    'message' => _t(
-                                        "SimpleBookings.OverBooked",
-                                        'This resource is Over Booked'
-                                    ),
-                                ),
-                            )
-                        )
-                    );
-
-                    $config
-                        ->removeComponentsByType("GridFieldDeleteAction")
-                        ->removeComponentsByType("GridFieldRelationSearch")
-                        ->removeComponentsByType("GridFieldAddExistingAutocompleter")
-                        ->addComponent(new GridFieldDeleteAction())
-                        ->addComponent(new GridFieldRecordHighlighter($alerts));
-                    
-                    $edit_form = $config->getComponentByType("GridFieldDetailForm");
-
-                    if (isset($edit_form)) {
-                        $edit_form->setItemRequestClass(
-                            BookingResourceDetailForm_ItemRequest::class
-                        );
-                    }
-                    
-                    $fields->removeByName("Resources");
-                    
-                    $fields->addFieldToTab(
-                        "Root.Main",
-                        $resources_field
-                    );
-                }
-
-                // Add has one picker field.
-                $fields->addFieldsToTab(
-                    'Root.Contact',
-                    array(
-                        TextField::create(
-                            "FirstName",
-                            $this->fieldLabel("FirstName")
-                        ),
-                        TextField::create(
-                            "Surname",
-                            $this->fieldLabel("Surname")
-                        ),
-                        TextField::create(
-                            "Email",
-                            $this->fieldLabel("Email")
-                        ),
-                        TextField::create(
-                            "PhoneNumber",
-                            $this->fieldLabel("PhoneNumber")
-                        ),
-                        HeaderField::create(
-                            "CustomerHeader",
-                            _t(
-                                "SimpleBookings.LinkToUser",
-                                "Link to an existing user account?"
-                            )
-                        ),
-                        HasOnePickerField::create(
-                            $self,
-                            'CustomerID',
-                            _t("SimpleBookings.CustomerInfo", 'Customer Info'),
-                            $self->Customer(),
-                            _t(
-                                "SimpleBookings.SelectExistingCustomer",
-                                'Select Existing Customer'
-                            )
-                        )->enableCreate(_t("SimpleBookings.AddNewCustomer", 'Add New Customer'))
-                        ->enableEdit()
-                    )
-                );
-
-                // Setup a field to handle order association
-                $fields->addFieldToTab(
-                    "Root.Order",
-                    $order_field = HasOnePickerField::create(
-                        $self,
-                        'OrderID',
-                        _t("SimpleBookings.LinkToOrder", 'Link to an Order'),
-                        $self->Order(),
-                        _t(
-                            "SimpleBookings.SelectExistingOrder",
-                            'Select Existing Order'
-                        )
-                    )->enableEdit()
-                    ->enableCreate(_t("SimpleBookings.AddNewOrder", 'Add New Order'))
-                );
-
-                $order_field
-                    ->getConfig()
-                    ->removeComponentsByType(GridFieldDetailForm::class)
-                    ->addComponent(new OrdersGridFieldDetailForm());
             }
         );
         
@@ -440,32 +329,8 @@ class Booking extends DataObject implements PermissionProvider
         } elseif (is_numeric($member)) {
             return Member::get()->byID($member);
         } else {
-            return Member::currentUser();
+            return Security::getCurrentUser();
         }
-    }
-
-    /**
-     * Syncronise this booking with an order
-     *
-     * @return void
-     */
-    public function sync()
-    {
-
-        // If we have no order assigned, generate an estimate and
-        // link to this booking
-        $order = $this->Order();
-        
-        if (!$order->exists()) {
-            $order = Estimate::create();
-            $order->write();
-        }
-
-        $sync = Syncroniser::create($this, $order)
-            ->setSyncProducts(true)
-            ->bookingToOrder();
-
-        $this->extend("afterSync", $order, $sync);
     }
 
     /**
@@ -494,7 +359,7 @@ class Booking extends DataObject implements PermissionProvider
      *
      * @return Boolean
      */
-    public function canCreate($member = null)
+    public function canCreate($member = null, $context = [])
     {
         $extended = $this->extend('canCreate', $member);
         if ($extended && $extended !== null) {
@@ -553,79 +418,11 @@ class Booking extends DataObject implements PermissionProvider
     }
 
     /**
-     * Perform pre-write database functions
+     * Each line item that is bookable needs a relevent booking
      *
-     * @return void
-     */
-    public function onBeforeWrite()
-    {
-        parent::onBeforeWrite();
-
-        // Check availability of assigned products and ensure they are
-        // booked within the boundries of the booking
-        foreach ($this->Resources() as $product) {
-            $quantity = $product->BookedQTY;
-            $start = ($product->Start) ? $product->Start : $this->Start;
-            $end = ($product->End) ? $product->End : $this->End;
-            $start_stamp = strtotime($start);
-            $end_stamp = strtotime($end);
-
-            // Dont allow products to be booked outside of this
-            // Bookings time scale
-            if ($start_stamp < strtotime($this->Start) || $start_stamp > strtotime($this->End)) {
-                $start = $this->Start;
-            }
-
-            if ($end_stamp > strtotime($this->End) || $end_stamp < strtotime($this->Start)) {
-                $end = $this->End;
-            }
-
-            $spaces = $product->getBookedPlaces($start, $end);
-            $diff = ($quantity + $spaces) - $product->getAvailablePlaces();
-
-            if ($diff < 0) {
-                $diff = 0;
-            }
-
-            $this->Resources()->add($product);
-        }
-
-        $this->updateEndDate();
-    }
-
-    /**
-     * Perform post write database functions
-     * 
-     * @return void
      */
     public function onAfterWrite()
     {
         parent::onAfterWrite();
-
-        if (!$this->DisableSync) {
-            $this->sync();
-        }
-    }
-
-    /**
-     * Perform post delete functions
-     *
-     * @return void
-     */
-    public function onAfterDelete()
-    {
-        parent::onAfterDelete();
-
-        // Clean up bookings on delete
-        foreach ($this->Resources() as $resource) {
-            $resource->delete();
-        }
-
-        // Ensure that the booking clears up after itself
-        if ($this->OrderID) {
-            $order = $this->Order();
-            $order->BookingID = 0;
-            $order->write();
-        }
     }
 }
