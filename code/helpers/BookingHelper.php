@@ -83,8 +83,12 @@ class BookingHelper
     public function getBookings()
     {
         $bookings = Booking::get()
-            ->filter("Item.StockID", $this->getProduct()->StockID)
-            ->where($this->getWhereFilter());
+            ->filter(
+                [
+                    'Item.StockID' => $this->getProduct()->StockID,
+                    'Status' => $this->getBookingConfirmedStatus()
+                ]
+            )->where($this->getWhereFilter());
 
         return $bookings;
     }
@@ -300,5 +304,15 @@ class BookingHelper
 
         $this->product = $product;
         return $this;
+    }
+
+    /**
+     * Get the status to filter bookings by (only confimed bookings should be counted)
+     *
+     * @return string 
+     */
+    public function getBookingConfirmedStatus()
+    {
+        return Booking::config()->confirmed_status;
     }
 }
