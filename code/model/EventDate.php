@@ -37,7 +37,7 @@ class EventDate extends DataObject
     ];
 
     private static $field_labels = [
-        'Time' => 'Time of event',
+        'BookedSpaces' => 'Number of Spaces Booked',
         'Start.Nice' => 'Start',
         'End.Nice' => 'End',
         'Spaces' => 'Number of available spaces'
@@ -79,8 +79,12 @@ class EventDate extends DataObject
      */
     public function getBookedSpaces()
     {
-        $helper = BookingHelper::create($this->Start, $this->End, $this->Event());
-        return $helper->getTotalBookedSpaces();
+        if (!empty($this->Start) && !empty($this->End)) {
+            $helper = BookingHelper::create($this->Start, $this->End, $this->Event());
+            return $helper->getTotalBookedSpaces();
+        }
+
+        return 0;
     }
 
     /**
@@ -102,10 +106,6 @@ class EventDate extends DataObject
     public function getCMSFields()
     {
         $this->beforeUpdateCMSFields(function ($fields) {
-            $fields
-                ->dataFieldByName('Time')
-                ->setDescription(_t(__CLASS__ . ".TimeDescription", 'Used for display purposes only'));
-
             $fields->addFieldToTab(
                 'Root.Main',
                 ReadonlyField::create('BookedSpaces')
