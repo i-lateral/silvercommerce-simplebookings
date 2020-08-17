@@ -1,5 +1,17 @@
 <?php
 
+namespace ilateral\SimpleBookings\Admin;
+
+use DateTime;
+use SilverStripe\Admin\ModelAdmin;
+use ilateral\SimpleBookings\Model\Booking;
+use ilateral\SimpleBookings\Model\ResourceAllocation;
+use SilverStripe\Forms\GridField\GridFieldDetailForm;
+use SilverStripe\GridFieldAddOns\GridFieldRecordHighlighter;
+use ilateral\SimpleBookings\Forms\GridField\BookingDetailForm;
+use ilateral\SimpleBookings\Forms\GridField\BookingDetailForm_ItemRequest;
+use SilverStripe\Dev\CsvBulkLoader;
+
 class BookingAdmin extends ModelAdmin
 {
     private static $url_segment = 'bookings';
@@ -22,76 +34,51 @@ class BookingAdmin extends ModelAdmin
      */
     private static $default_end_time = "23:59";
 
-    private static $managed_models = array(
-        'Booking' => array('title' => 'Bookings'),
-        'ResourceAllocation' => array('title' => 'Resource Allocations')
-    );
+    private static $managed_models = [
+        Booking::class,
+        ResourceAllocation::class
+    ];
 
-    private static $model_importers = array(
-        'Booking' => 'CSVBulkLoader',
-    );
-
-    public $showImportForm = array('Booking');
+    private static $model_importers = [
+        Booking::class => CsvBulkLoader::class,
+    ];
 
     /**
-     * @return Form
+     * Return list of booking alerts to show 
      */
-    public function SearchForm()
+    public function getBookingAlerts()
     {
-        $form = parent::SearchForm();
-        $fields = $form->Fields();
-        $query = $this->getRequest()->getVar("q");
-
-        $fields->replaceField(
-            "q[Start]",
-            $start_field = DateField::create("q[StartDate]", _t("SimpleBookings.StartDate", "Start Date"))
-                ->setConfig('showcalendar', true)
-        );
-
-        $fields->replaceField(
-            "q[End]",
-            $end_field = DateField::create("q[EndDate]", _t("SimpleBookings.EndDate", "End Date"))
-                ->setConfig('showcalendar', true)
-        );
-
-        if (is_array($query) && array_key_exists("StartDate", $query)) {
-            $start_field->setValue($query["StartDate"]);
-        }
-
-        if (is_array($query) && array_key_exists("EndDate", $query)) {
-            $end_field->setValue($query["EndDate"]);
-        }
-
-        $this->extend('updateSearchForm', $form);
-
-        return $form;
+        return [
+            'SpacesRemaining' => [
+                'comparator' => 'less',
+                'patterns' => [
+                    '0' => [
+                        'status' => 'alert',
+                        'message' => _t("SimpleBookings.OverBookedAlert", 'This is overbooked'),
+                    ]
+                ]
+            ]
+        ];
     }
 
     public function getEditForm($id = null, $fields = null)
     {
         $form = parent::getEditForm($id, $fields);
         $fields = $form->Fields();
-        $gridField = $form->Fields()->fieldByName($this->modelClass);
+
+        /** @var \SilverStripe\Forms\GridField\GridField */
+        $gridField = $form->Fields()->fieldByName($this->sanitiseClassName($this->modelClass));
         $config = $gridField->getConfig();
 
-        // Alterations for Hiarachy on product cataloge
-        if ($this->modelClass == 'Booking') {
-            $alerts = array(
-            'OverBooked' => array(
-            'comparator' => 'equal',
-            'patterns' => array(
-            '1' => array(
-            'status' => 'alert',
-            'message' => _t("SimpleBookings.OverBookedResource", 'This has an Over Booked resource'),
-            ),
-            )
-            )
-            );
-
-            $config
-                ->removeComponentsByType("GridFieldDetailForm")
-                ->addComponent(new GridFieldRecordHighlighter($alerts))
-                ->addComponent(new BookingDetailForm());
+        if ($this->modelClass == Booking::class) {
+            /** @var GridFieldDetailForm */
+            $detail_form = $config
+                ->getComponentByType(GridFieldDetailForm::class);
+            
+            $detail_form
+                ->setItemRequestClass(BookingDetailForm_ItemRequest::class);
+            
+            $config->addComponent(new GridFieldRecordHighlighter($this->getBookingAlerts()));
         }
 
         $this->extend('updateEditForm', $form);
@@ -106,10 +93,10 @@ class BookingAdmin extends ModelAdmin
         $filter = array();
         
         // Perform complex filtering
-        if ($this->modelClass == 'Booking') {
+        if ($this->modelClass == Booking::class) {
             $query = $this->getRequest()->getVar("q");
             // If a start date and end date are set, filter all dates
-            if (is_array($query)) {
+            /*if (is_array($query)) {
                 $start_object = new Date();
                 $end_object = new Date();
                 $start_date = null;
@@ -133,7 +120,7 @@ class BookingAdmin extends ModelAdmin
                         ->exclude("End:LessThan", $start_date->format("Y-m-d H:i:s"))
                         ->exclude("Start:GreaterThan", $end_date->format("Y-m-d H:i:s"));
                 }
-            }
+            }*/
         }
         
         $this->extend('updateList', $list);
