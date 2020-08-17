@@ -8,19 +8,19 @@ namespace ilateral\SimpleBookings\Interfaces;
 interface Bookable
 {
     /**
-     * Get the available spaces within a date range
+     * Get the total number of spaces allowed within a date range
      *
-     * @param string $start 
+     * @param string $start
      * @param string $end
      *
      * @return int
      */
-    public function getAvailableSpaces(string $start, string $end);
+    public function getPossibleSpaces(string $start, string $end);
 
     /**
      * Get the number of spaces booked within a date range
      *
-     * @param string $start 
+     * @param string $start
      * @param string $end
      *
      * @return int
