@@ -23,7 +23,7 @@ class BookingHelper
      * they cannot be edited)?
      *
      * @var    boolean
-     * @config 
+     * @config
      */
     private static $lock_cart = true;
 
@@ -33,7 +33,7 @@ class BookingHelper
      * module assumes no.
      *
      * @var    boolean
-     * @config 
+     * @config
      */
     private static $allow_delivery = false;
 
@@ -143,7 +143,7 @@ class BookingHelper
     /**
      * Takes two dates formatted as YYYY-MM-DD and creates an inclusive
      * array of the timecodes between the from and to dates.
-     * 
+     *
      * Thanks to this stack overflow post:
      * http://stackoverflow.com/questions/4312439/php-return-all-dates-between-two-dates-in-an-array
      *
@@ -155,7 +155,7 @@ class BookingHelper
      */
     public static function createDateRangeArray($date_from, $date_to, $interval)
     {
-        $range = array();
+        $range = [];
         $time_from = strtotime($date_from);
         $time_to = strtotime($date_to);
 
@@ -172,7 +172,7 @@ class BookingHelper
     /**
      * Find the total spaces already booked between the defined dates
      * for the selected product.
-     * 
+     *
      * @return int
      */
     public function getTotalBookedSpaces()
@@ -196,7 +196,7 @@ class BookingHelper
             }
 
             $resources = $allocation->Resources()->Filter('ID', $ID);
-            
+
             foreach ($resources as $product) {
                 if ($all_allocated || $product->AllocateAll) {
                     $total_places += $product->AvailablePlaces;
@@ -206,8 +206,8 @@ class BookingHelper
                     $alloc_start_stamp = strtotime($allocation->Start);
                     $alloc_end_stamp = strtotime($allocation->End);
 
-                    if ($alloc_start_stamp >= $start_stamp && $alloc_start_stamp <= $end_stamp 
-                        || $alloc_start_stamp <= $start_stamp && $alloc_end_stamp >= $end_stamp 
+                    if ($alloc_start_stamp >= $start_stamp && $alloc_start_stamp <= $end_stamp
+                        || $alloc_start_stamp <= $start_stamp && $alloc_end_stamp >= $end_stamp
                         || $alloc_end_stamp >= $start_stamp && $alloc_end_stamp <= $end_stamp
                     ) {
                         if ($product->Increase) {
@@ -240,7 +240,7 @@ class BookingHelper
      * Get start date as a datetime object
      *
      * @return DateTime
-     */ 
+     */
     public function getStartDate()
     {
         return $this->start_date;
@@ -250,7 +250,7 @@ class BookingHelper
      * Get start date as a datetime object
      *
      * @return DateTime
-     */ 
+     */
     public function getStartDateObject()
     {
         return new DateTime($this->start_date);
@@ -262,7 +262,7 @@ class BookingHelper
      * @param string $start_date Start date used for filtering
      *
      * @return self
-     */ 
+     */
     public function setStartDate(string $start_date)
     {
         $this->start_date = $start_date;
@@ -273,7 +273,7 @@ class BookingHelper
      * Get end date
      *
      * @return string
-     */ 
+     */
     public function getEndDate()
     {
         return $this->end_date;
@@ -283,7 +283,7 @@ class BookingHelper
      * Get end date as a datetime object
      *
      * @return DateTime
-     */ 
+     */
     public function getEndDateObject()
     {
         return new DateTime($this->end_date);
@@ -295,7 +295,7 @@ class BookingHelper
      * @param string $end_date End date used for filtering
      *
      * @return self
-     */ 
+     */
     public function setEndDate(string $end_date)
     {
         $this->end_date = $end_date;
@@ -306,7 +306,7 @@ class BookingHelper
      * Get product to check for bookings
      *
      * @return CatalogueProduct
-     */ 
+     */
     public function getProduct()
     {
         return $this->product;
@@ -318,7 +318,7 @@ class BookingHelper
      * @param CatalogueProduct  $product  Product to check for bookings
      *
      * @return self
-     */ 
+     */
     public function setProduct(CatalogueProduct $product)
     {
         // If this product isn't an allowed type, flag an exception
@@ -333,7 +333,7 @@ class BookingHelper
     /**
      * Get the status to filter bookings by (only confimed bookings should be counted)
      *
-     * @return string 
+     * @return string
      */
     public function getBookingConfirmedStatus()
     {

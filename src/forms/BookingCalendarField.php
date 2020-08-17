@@ -10,13 +10,13 @@ use SilverStripe\Forms\FormField;
 
 class BookingCalendarField extends FormField
 {
-    private static $allowed_actions = array(
+    private static $allowed_actions = [
         'calendar'
-    );
+    ];
 
-    private static $url_handlers = array(
+    private static $url_handlers = [
         'calendar//$Month/$Year' => 'calendar'
-    );
+    ];
 
     protected $startValue;
 
@@ -51,7 +51,7 @@ class BookingCalendarField extends FormField
      * @param string $title The field label.
      * @param int    $value The value of the field.
      */
-    public function __construct($name, $title = null, $value = null,$product) 
+    public function __construct($name, $title = null, $value = null, $product)
     {
         $this->product = $product;
         $this->children = FieldList::create();
@@ -59,7 +59,7 @@ class BookingCalendarField extends FormField
         parent::__construct($name, $title, $value);
     }
 
-    public function getCalendarDays($month,$year)
+    public function getCalendarDays($month, $year)
     {
         $today = new Date();
         $today->setValue(date("Y-m-d H:i:s"));
@@ -161,16 +161,16 @@ class BookingCalendarField extends FormField
                 $end->setValue($day->Date->format("Y-m-d 23:59:59"));
 
                 $spaces = $product->getPlacesRemaining($start->format("Y-m-d H:i:s"), $end->format("Y-m-d H:i:s"));
-                if (($spaces > 0 && $day->Date->format("Y-m-d H:i:s") > $today->format("Y-m-d H:i:s")) 
+                if (($spaces > 0 && $day->Date->format("Y-m-d H:i:s") > $today->format("Y-m-d H:i:s"))
                     && !in_array($day->Date->format("Y-m-d"), $this->disabled_dates)
                 ) {
                     $day->Availability = 'available';
                     $day->Spaces = $spaces;
                     $day->Lock = false;
                 } else {
-                    $day->Availability = 'not-available'; 
+                    $day->Availability = 'not-available';
                     $day->Spaces = 0;
-                    $day->Lock = true;                   
+                    $day->Lock = true;
                 }
             }
         }
@@ -183,7 +183,7 @@ class BookingCalendarField extends FormField
         return $this->product;
     }
 
-    public function setProduct($product) 
+    public function setProduct($product)
     {
         $this->product = $product;
 
@@ -331,7 +331,7 @@ class BookingCalendarField extends FormField
         );
     }
 
-    public function Field($properties = array())
+    public function Field($properties = [])
     {
         $this->children->add(
             HiddenField::create(
@@ -443,7 +443,7 @@ class BookingCalendarField extends FormField
      */
     public function getAttributes()
     {
-        $attributes = array(
+        $attributes = [
             'name' => $this->getName(),
             'class' => $this->extraClass(),
             'id' => $this->ID(),
@@ -451,7 +451,7 @@ class BookingCalendarField extends FormField
             'readonly' => $this->isReadonly(),
             'data-url' => $this->Link('calendar'),
             'data-days' => $this->options['days_count']
-        );
+        ];
 
         if ($this->Required()) {
             $attributes['required'] = 'required';
@@ -480,7 +480,7 @@ class BookingCalendarField extends FormField
                     _t(
                         'CalendarField.NO_DATE',
                         "Please select a date.",
-                        array('value' => $this->value)
+                        ['value' => $this->value]
                     ),
                     "validation"
                 );
@@ -494,7 +494,7 @@ class BookingCalendarField extends FormField
                     _t(
                         'CalendarField.NO_DATE',
                         "Please select a start date.",
-                        array('value' => $this->value)
+                        ['value' => $this->value]
                     ),
                     "validation"
                 );
@@ -507,7 +507,7 @@ class BookingCalendarField extends FormField
                     _t(
                         'CalendarField.NO_END_DATE',
                         "Please select an end date.",
-                        array('value' => $this->value)
+                        ['value' => $this->value]
                     ),
                     "validation"
                 );
@@ -520,7 +520,7 @@ class BookingCalendarField extends FormField
                     _t(
                         'CalendarField.INVALID_DATES',
                         "The end date needs to be after the start date.",
-                        array('value' => $this->value)
+                        ['value' => $this->value]
                     ),
                     "validation"
                 );

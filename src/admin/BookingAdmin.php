@@ -44,7 +44,7 @@ class BookingAdmin extends ModelAdmin
     ];
 
     /**
-     * Return list of booking alerts to show 
+     * Return list of booking alerts to show
      */
     public function getBookingAlerts()
     {
@@ -90,7 +90,7 @@ class BookingAdmin extends ModelAdmin
     {
         $list = parent::getList();
 
-        $filter = array();
+        $filter = [];
         
         // Perform complex filtering
         if ($this->modelClass == Booking::class) {
@@ -115,7 +115,7 @@ class BookingAdmin extends ModelAdmin
                 }
 
                 // If both dates are the same, we can assume that it is a one day booking
-                if ($start_date && $end_date) {                        
+                if ($start_date && $end_date) {
                     $list = $list
                         ->exclude("End:LessThan", $start_date->format("Y-m-d H:i:s"))
                         ->exclude("Start:GreaterThan", $end_date->format("Y-m-d H:i:s"));

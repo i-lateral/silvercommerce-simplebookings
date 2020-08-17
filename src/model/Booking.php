@@ -316,7 +316,7 @@ class Booking extends DataObject implements PermissionProvider
 
     /**
      * {@inheritdoc}
-     * 
+     *
      * @return FieldList
      */
     public function getCMSFields()
@@ -353,43 +353,43 @@ class Booking extends DataObject implements PermissionProvider
 
     /**
      * {@inheritdoc}
-     * 
+     *
      * @return array
      */
     public function providePermissions()
     {
-        return array(
-            "BOOKING_VIEW_BOOKINGS" => array(
+        return [
+            "BOOKING_VIEW_BOOKINGS" => [
                 'name' => 'View any booking',
                 'help' => 'Allow user to view any booking',
                 'category' => 'Bookings',
                 'sort' => 99
-            ),
-            "BOOKING_CREATE_BOOKINGS" => array(
+            ],
+            "BOOKING_CREATE_BOOKINGS" => [
                 'name' => 'Create a booking',
                 'help' => 'Allow user to create a booking',
                 'category' => 'Bookings',
                 'sort' => 98
-            ),
-            "BOOKING_EDIT_BOOKINGS" => array(
+            ],
+            "BOOKING_EDIT_BOOKINGS" => [
                 'name' => 'Edit any booking',
                 'help' => 'Allow user to edit any booking',
                 'category' => 'Bookings',
                 'sort' => 97
-            ),
-            "BOOKING_DELETE_BOOKINGS" => array(
+            ],
+            "BOOKING_DELETE_BOOKINGS" => [
                 'name' => 'Delete any booking',
                 'help' => 'Allow user to delete any booking',
                 'category' => 'Bookings',
                 'sort' => 96
-            )
-        );
+            ]
+        ];
     }
 
     /**
      * Return a member object, based on eith the passed param or
      * getting the currently logged in Member.
-     * 
+     *
      * @param Member $member Either a Member object or an Int
      *
      * @return Member | Null
@@ -419,7 +419,7 @@ class Booking extends DataObject implements PermissionProvider
 
         $member = $this->getMember($member);
 
-        if ($member && Permission::checkMember($member->ID, array("ADMIN", "BOOKING_VIEW_BOOKINGS"))) {
+        if ($member && Permission::checkMember($member->ID, ["ADMIN", "BOOKING_VIEW_BOOKINGS"])) {
             return true;
         }
 
@@ -440,7 +440,7 @@ class Booking extends DataObject implements PermissionProvider
 
         $member = $this->getMember($member);
 
-        if ($member && Permission::checkMember($member->ID, array("ADMIN", "BOOKING_CREATE_BOOKINGS"))) {
+        if ($member && Permission::checkMember($member->ID, ["ADMIN", "BOOKING_CREATE_BOOKINGS"])) {
             return true;
         }
 
@@ -461,7 +461,7 @@ class Booking extends DataObject implements PermissionProvider
 
         $member = $this->getMember($member);
 
-        if ($member && Permission::checkMember($member->ID, array("ADMIN", "BOOKING_EDIT_BOOKINGS"))) {
+        if ($member && Permission::checkMember($member->ID, ["ADMIN", "BOOKING_EDIT_BOOKINGS"])) {
             return true;
         }
 
@@ -482,7 +482,7 @@ class Booking extends DataObject implements PermissionProvider
 
         $member = $this->getMember($member);
 
-        if ($member && Permission::checkMember($member->ID, array("ADMIN", "BOOKING_DELETE_BOOKINGS"))) {
+        if ($member && Permission::checkMember($member->ID, ["ADMIN", "BOOKING_DELETE_BOOKINGS"])) {
             return true;
         }
 

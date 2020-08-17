@@ -13,24 +13,24 @@ class ResourceAllocation extends DataObject
 {
     private static $table_name = "SimpleBookings_ResourceAllocation";
 
-    private static $db = array(
+    private static $db = [
         'Title' => 'Varchar',
         'Start' => 'DBDatetime',
         'End'   => 'DBDatetime',
-        'AllocateAll' => 'Boolean'   
-    );
+        'AllocateAll' => 'Boolean'
+    ];
 
-    private static $many_many = array(
+    private static $many_many = [
         'Resources' => BookableProduct::class
-    );
+    ];
 
-    private static $many_many_extraFields = array(
+    private static $many_many_extraFields = [
         'Resources' => [
             'Quantity' => 'Int',
             'AllocateAll' => 'Boolean',
             'Increase' => 'Boolean'
         ]
-    );
+    ];
 
     private static $summary_fields = [
         'FullTitle' => 'Title',
@@ -47,10 +47,10 @@ class ResourceAllocation extends DataObject
 
     /**
      * Return a more comprehensive title for this object
-     * 
+     *
      * @return string
      */
-    public function getFullTitle() 
+    public function getFullTitle()
     {
         if ($this->Title) {
             return $this->Title;
@@ -60,10 +60,10 @@ class ResourceAllocation extends DataObject
 
     /**
      * Return a rendered list of resources contained in this booking
-     * 
+     *
      * @return string
      */
-    public function getResourcesList() 
+    public function getResourcesList()
     {
         $list = [];
 
@@ -76,7 +76,7 @@ class ResourceAllocation extends DataObject
 
     /**
      * {@inheritdoc}
-     * 
+     *
      * @return FieldList
      */
     public function getCMSFields()
@@ -106,28 +106,28 @@ class ResourceAllocation extends DataObject
             $editable_cols = new GridFieldEditableColumns();
             $editable_cols
                 ->setDisplayFields(
-                    array(
-                    'Title' => array(
+                    [
+                    'Title' => [
                         'field' => 'ReadonlyField',
                         'title' => _t("SimpleBookings.Title", "Title")
-                    ),
-                    'AvailablePlaces' => array(
+                    ],
+                    'AvailablePlaces' => [
                         'field' => 'ReadonlyField',
                         'title' => _t("SimpleBookings.TotalPlaces", "total Places")
-                    ),
-                    'Quantity' => array(
+                    ],
+                    'Quantity' => [
                         'field' => 'NumericField',
                         'title' => _t("SimpleBookings.NumbertoAllocate", "Number to Allocate")
-                    ),
-                    'AllocateAll' => array(
+                    ],
+                    'AllocateAll' => [
                         'field' => 'CheckBoxField',
                         'title' => _t("SimpleBookings.AllocateAll", "Allocate All")
-                    ),
-                    'Increase' => array(
+                    ],
+                    'Increase' => [
                         'field' => 'CheckBoxField',
                         'title' => _t("SimpleBookings.Increase", "Increase availability")
-                    )
-                    )
+                    ]
+                    ]
                 );
 
 

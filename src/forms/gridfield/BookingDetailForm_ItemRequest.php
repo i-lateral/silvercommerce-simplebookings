@@ -9,11 +9,11 @@ use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
 class BookingDetailForm_ItemRequest extends GridFieldDetailForm_ItemRequest
 {
 
-    private static $allowed_actions = array(
+    private static $allowed_actions = [
         'edit',
         'view',
         'ItemEditForm',
-    );
+    ];
 
     public function ItemEditForm()
     {
@@ -36,7 +36,6 @@ class BookingDetailForm_ItemRequest extends GridFieldDetailForm_ItemRequest
                     $total_html
                 )
             );
-
         }
         
         $this->extend("updateItemEditForm", $form);

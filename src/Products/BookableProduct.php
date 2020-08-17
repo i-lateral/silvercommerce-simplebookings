@@ -21,45 +21,45 @@ class BookableProduct extends Product
      * A list of possible pricing periods for this product.
      * These periods are used to dertime how a product's#
      * price is calculted.
-     * 
+     *
      * @var array
      * @config
      */
-    private static $price_periods = array(
+    private static $price_periods = [
         86400 => "Day",
         43200 => "Half Day",
         3600 => "Hour"
-    );
+    ];
 
     /**
      * Define the default pricing period used. This should be
      * supported by the $price_periods defined above.
-     * 
+     *
      * By default this is set to a day.
-     * 
+     *
      * @var    int
      * @config
      */
     private static $default_price_period = 86400;
 
-    private static $db = array(
+    private static $db = [
         "AvailablePlaces" => "Int",
         "MinimumPlaces" => "Int",
         "PricingPeriod" => "Int"
-    );
+    ];
 
-    private static $has_many = array(
+    private static $has_many = [
         'Resources' => 'BookingResource'
-    );
+    ];
 
-    private static $defaults = array(
+    private static $defaults = [
         "Stocked" => 0,
         "MinimumPlaces" => 0
-    );
+    ];
 
-    private static $belongs_many_many = array(
+    private static $belongs_many_many = [
         "Allocations" => "ResourceAllocation"
-    );
+    ];
 
     public function populateDefaults()
     {
@@ -74,7 +74,7 @@ class BookableProduct extends Product
         // Add spacing fields
         $availability_field = $fields->addFieldsToTab(
             "Root.Settings",
-            array(
+            [
                 DropdownField::create("PricingPeriod")
                     ->setSource($this->config()->price_periods)
                     ->setRightTitle(
@@ -97,14 +97,14 @@ class BookableProduct extends Product
                             "Does this require a minimum amount to book (use 0 to disable)?"
                         )
                     )
-            ),
+            ],
             "StockLevel"
         );
 
         $fields->removeByName("Stocked");
         $fields->removeByName("StockLevel");
         $fields->removeByName("PackSize");
-        $fields->removeByName("Weight"); 
+        $fields->removeByName("Weight");
 
         $this->extend('updateCMSFields', $fields);
 
@@ -128,7 +128,7 @@ class BookableProduct extends Product
         );
     }
 
-    public function getPlacesRemaining($start, $end) 
+    public function getPlacesRemaining($start, $end)
     {
         $places = $this->AvailablePlaces;
 

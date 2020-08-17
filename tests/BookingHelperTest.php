@@ -9,7 +9,7 @@ use SilverStripe\Dev\SapphireTest;
 class BookingHelperTest extends SapphireTest
 {
 
-    /** 
+    /**
      * Defines the fixture file to use for this test class
      *
      */

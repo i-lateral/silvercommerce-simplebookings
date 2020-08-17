@@ -9,7 +9,7 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 
 class EventDateTest extends SapphireTest
 {
-    /** 
+    /**
      * Defines the fixture file to use for this test class
      *
      */

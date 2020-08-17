@@ -16,7 +16,7 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 class EventProductTest extends SapphireTest
 {
 
-    /** 
+    /**
      * Defines the fixture file to use for this test class
      *
      */
@@ -26,7 +26,7 @@ class EventProductTest extends SapphireTest
      * Test if the booked spaces algorythm returns the
      * correct results when we have a booking that starts
      * before but ends inside an existing booking
-     * 
+     *
      * @return void
      */
     public function testGetCurrentDates()

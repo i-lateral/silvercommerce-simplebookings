@@ -64,7 +64,7 @@ class BookableProductController extends ProductController
             );
 
             return $this->redirectBack();
-        }        
+        }
 
         // Check if we have set an end date that is after the start date
         if ($time_start < $time_now) {
@@ -79,7 +79,7 @@ class BookableProductController extends ProductController
 
         $classname = $data["ClassName"];
         $id = $data["ID"];
-        $customisations = array();
+        $customisations = [];
         
         $cart = ShoppingCart::get();
 
@@ -92,7 +92,7 @@ class BookableProductController extends ProductController
                         "SimpleBookings.NotEnoughPlacesError",
                         "You must book a minimum of {value} places",
                         'Message generated when user tries to book to few places',
-                        array('value' => $object->MinimumPlaces)
+                        ['value' => $object->MinimumPlaces]
                     ),
                     "bad"
                 );
@@ -111,37 +111,36 @@ class BookableProductController extends ProductController
             if ($resources = $object->Resources()) {
                 $resource = $resources->First();
             } else {
-
             }
 
             // If spaces are available, then we need to setup our shopping cart,
             // else  return with an error
             if (!$resource || ($resource && $resource->isAvailable($data["Calendar"]["StartDate"], $data["Calendar"]["EndDate"], $data["Quantity"]))) {
-                if($object->TaxRateID && $object->TaxRate()->Amount) {
+                if ($object->TaxRateID && $object->TaxRate()->Amount) {
                     $tax_rate = $object->TaxRate()->Amount;
                 } else {
                     $tax_rate = 0;
                 }
 
-                $customisations[] = array(
+                $customisations[] = [
                     "Title" => _t("SimpleBookings.StartDate", "Start Date"),
                     "Value" => $data["Calendar"]["StartDate"],
                     "Price" => 0
-                );
+                ];
 
-                $customisations[] = array(
+                $customisations[] = [
                     "Title" => _t("SimpleBookings.EndDate", "End Date"),
                     "Value" => $data["Calendar"]["EndDate"],
                     "Price" => 0
-                );
+                ];
 
-                $customisations[] = array(
+                $customisations[] = [
                     "Title" => _t("SimpleBookings.LengthOfTime", "Length of Time"),
                     "Value" => $total_time,
                     "Price" => ($object->Price * $total_time) - $object->Price
-                );
+                ];
 
-                $item_to_add = array(
+                $item_to_add = [
                     "Key" => $object->ID . ':' . base64_encode(json_encode($customisations)),
                     "Title" => $object->Title,
                     "Content" => $object->Content,
@@ -156,7 +155,7 @@ class BookableProductController extends ProductController
                     "Locked" => SimpleBookings::config()->lock_cart,
                     "Deliverable" => SimpleBookings::config()->allow_delivery,
                     "Stocked" => false
-                );
+                ];
                 
                 // Try and add item to cart, return any exceptions raised
                 // as a message
@@ -173,12 +172,12 @@ class BookableProductController extends ProductController
                         "success",
                         $message
                     );
-                } catch(ValidationException $e) {
+                } catch (ValidationException $e) {
                     $form->sessionMessage(
                         $e->getMessage(),
                         "bad"
                     );
-                } catch(Exception $e) {
+                } catch (Exception $e) {
                     $form->sessionMessage(
                         $e->getMessage(),
                         "bad"

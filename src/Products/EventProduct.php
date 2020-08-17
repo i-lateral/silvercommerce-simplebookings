@@ -43,7 +43,7 @@ class EventProduct extends Product implements Bookable
     /**
      * Get the total number of spaces allowed within a date range
      *
-     * @param string $start 
+     * @param string $start
      * @param string $end
      *
      * @return int
@@ -63,11 +63,11 @@ class EventProduct extends Product implements Bookable
 
     /**
      * Get number of booked spaces within a date range
-     * 
+     *
      * NOTE: This method uses BookingHelper direct (rather than first getting
      * a relevent date, in an attempt to run more effitiently)
      *
-     * @param string $start 
+     * @param string $start
      * @param string $end
      *
      * @return int
@@ -79,13 +79,13 @@ class EventProduct extends Product implements Bookable
     }
 
     /**
-     * Get a list of disabled dates for this 
+     * Get a list of disabled dates for this
      */
     public function getDisabledDateIDs()
     {
         $disabled = [];
 
-        foreach($this->Dates() as $date) {
+        foreach ($this->Dates() as $date) {
             // If in past, disable and move to next
             if ($date->isPast() || $date->RemainingSpaces <= 0) {
                 $disabled[] = $date->ID;

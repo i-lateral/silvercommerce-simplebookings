@@ -102,7 +102,7 @@ class EventProductController extends ProductController
                     $message,
                     ValidationResult::TYPE_GOOD
                 );
-            } catch(Exception $e) {
+            } catch (Exception $e) {
                 $form->sessionMessage(
                     $e->getMessage()
                 );
