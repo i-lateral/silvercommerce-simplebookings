@@ -1,26 +1,27 @@
 <?php
 
+namespace ilateral\SimpleBookings\Model;
+
+use SilverStripe\ORM\DataObject;
+use ilateral\SimpleBookings\Products\BookableProduct;
+
 /**
  * Pre-allocate resources (for example over christmas) that will be accounted for
  * when attempting to calculate bookings
- *
- * @category SilverstripeModule
- * @package  SimpleBookings
- * @author   ilateral <info@ilateral.co.uk>
- * @license  https://spdx.org/licenses/BSD-3-Clause.html BSD-3-Clause
- * @link     https://github.com/i-lateral/silverstripe-commerce-simplebookings
  */
 class ResourceAllocation extends DataObject
 {
+    private static $table_name = "SimpleBookings_ResourceAllocation";
+
     private static $db = array(
         'Title' => 'Varchar',
-        'Start' => 'SS_DateTime',
-        'End'   => 'SS_DateTime',
+        'Start' => 'DBDatetime',
+        'End'   => 'DBDatetime',
         'AllocateAll' => 'Boolean'   
     );
 
     private static $many_many = array(
-        'Resources' => 'BookableProduct'
+        'Resources' => BookableProduct::class
     );
 
     private static $many_many_extraFields = array(
