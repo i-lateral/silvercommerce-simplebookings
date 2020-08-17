@@ -43,6 +43,7 @@ class EventProductController extends ProductController
                 'Date',
                 _t(__CLASS__ . '.SelectDate', 'Select a date')
             )->setSource($object->getCurrentDates()->map())
+            ->setDisabledItems($this->getDisabledDateIDs())
             ->setForm($form)
         );
 
@@ -76,13 +77,17 @@ class EventProductController extends ProductController
                     ->setProduct($object)
                     ->setQuantity($data['Quantity'])
                     ->setCustomisations($customisations)
-                    ->makeItem();
+                    ->makeItem()
+                    ->write();
 
-                // Update the line item to set the relevent date
+                // Now get and update the assotiated booking data
                 $item = $factory->getItem();
-                $item->StartDate = $date->Start;
-                $item->EndDate = $date->End;
-                $factory->write();
+
+                /** @var \ilateral\SimpleBookings\Model\Booking */
+                $booking = $item->Booking();
+                $booking->Start = $date->Start;
+                $booking->End = $date->End;
+                $booking->write();
 
                 $cart->addFromLineItemFactory($factory);
                 $cart->save();
