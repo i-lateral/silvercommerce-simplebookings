@@ -68,6 +68,17 @@ class BookingHelper
         return ClassInfo::implementorsOf(Bookable::class);
     }
 
+    /**
+     * Get a list of bookable products from the database
+     *
+     * @return DataList
+     */
+    public static function getBookableProducts()
+    {
+        $classes = self::getBookableProductClasses();
+        return CatalogueProduct::get()->filter('ClassName', $classes);
+    }
+
     public function __construct(string $start, string $end, CatalogueProduct $product)
     {
         $this->setStartDate($start);
@@ -85,7 +96,7 @@ class BookingHelper
         $bookings = Booking::get()
             ->filter(
                 [
-                    'Item.StockID' => $this->getProduct()->StockID,
+                    'StockID' => $this->getProduct()->StockID,
                     'Status' => $this->getBookingConfirmedStatus()
                 ]
             )->where($this->getWhereFilter());
@@ -169,10 +180,10 @@ class BookingHelper
         // Get all products inside these bookings that
         // match our date range and tally the results
         $bookings = $this->getBookings();
-        $total_places = 0;
+        $total = 0;
 
         foreach ($bookings as $booking) {
-            $total_places += $booking->PlacesBooked;
+            $total += $booking->Spaces;
         }
 
         /*// Now get all allocations and update
@@ -209,7 +220,20 @@ class BookingHelper
             }
         }*/
 
-        return $total_places;
+        return $total;
+    }
+
+    /**
+     * Get the total remaining spaces for selected product in this timeframe
+     *
+     * @return int
+     */
+    public function getRemainingSpaces()
+    {
+        $possible = $this->getProduct()->getPossibleSpaces($this->getStartDate(), $this->getEndDate());
+        $booked = $this->getTotalBookedSpaces();
+
+        return $possible - $booked;
     }
 
     /**
