@@ -1,10 +1,17 @@
 <?php
 
-class BookableProduct_Controller extends Product_Controller
+namespace ilateral\SimpleBookings\Products;
+
+use ProductController;
+use BookingCalendarField;
+use SilverStripe\Forms\HeaderField;
+use SilverCommerce\QuantityField\Forms\QuantityField;
+
+class BookableProductController extends ProductController
 {
-    public static $allowed_actions = array(
+    private static $allowed_actions = [
         'Form'
-    );
+    ];
 
     public function Form()
     {
@@ -34,7 +41,7 @@ class BookableProduct_Controller extends Product_Controller
                     "Number of Spaces"
                 )
             )->setValue('1')
-            ->addExtraClass('checkout-additem-quantity')
+                ->addExtraClass('checkout-additem-quantity')
         );
 
         $this->extend("updateBookingForm", $form);

@@ -1,16 +1,16 @@
 <?php
 
+namespace ilateral\SimpleBookings\Products;
+
+use Product;
+
 /**
  * A product that can be booked by by adding it to the shopping cart and paying
- *
- * @category SilverstripeModule
- * @package  SimpleBookings
- * @author   ilateral <info@ilateral.co.uk>
- * @license  https://spdx.org/licenses/BSD-3-Clause.html BSD-3-Clause
- * @link     https://github.com/i-lateral/silverstripe-commerce-simplebookings
  */
 class BookableProduct extends Product
 {
+    private static $table_name = "SimpleBookings_BookableProduct";
+
     /**
      * @var    string
      * @config
@@ -22,7 +22,7 @@ class BookableProduct extends Product
      * These periods are used to dertime how a product's#
      * price is calculted.
      * 
-     * @var    array
+     * @var array
      * @config
      */
     private static $price_periods = array(
