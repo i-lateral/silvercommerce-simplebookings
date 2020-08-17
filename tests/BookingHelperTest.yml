@@ -1,0 +1,89 @@
+ilateral\SimpleBookings\Products\EventProduct:
+  workshop_one:
+    Title: "Workshop One"
+    StockID: "1234"
+  workshop_two:
+    Title: "Workshop Two"
+    StockID: "4321"
+ilateral\SimpleBookings\Model\EventDate:
+  workshop_one_one:
+    Start: "2020-06-16 10:00:00"
+    End: "2020-06-16 17:00:00"
+    Event: =>ilateral\SimpleBookings\Products\EventProduct.workshop_one
+  workshop_one_two:
+    Start: "2020-07-16 10:00:00"
+    End: "2020-07-16 17:00:00"
+    Event: =>ilateral\SimpleBookings\Products\EventProduct.workshop_one
+  workshop_one_three:
+    Start: "2020-05-16 10:00:00"
+    End: "2020-05-16 17:00:00"
+    Event: =>ilateral\SimpleBookings\Products\EventProduct.workshop_one
+  workshop_two_one:
+    Start: "2020-06-16 10:00:00"
+    End: "2020-06-16 17:00:00"
+    Event: =>ilateral\SimpleBookings\Products\EventProduct.workshop_two
+SilverCommerce\OrdersAdmin\Model\LineItem:
+  item_one:
+    StockID: "1234"
+    ProductClass: ilateral\SimpleBookings\Products\EventProduct
+    Quantity: 5
+  item_two:
+    StockID: "1234"
+    ProductClass: ilateral\SimpleBookings\Products\EventProduct
+    Quantity: 3
+  item_three:
+    StockID: "1234"
+    ProductClass: ilateral\SimpleBookings\Products\EventProduct
+    Quantity: 1
+  item_four:
+    StockID: "1234"
+    ProductClass: ilateral\SimpleBookings\Products\EventProduct
+    Quantity: 2
+  item_five:
+    StockID: "1234"
+    ProductClass: ilateral\SimpleBookings\Products\EventProduct
+    Quantity: 4
+  item_six:
+    StockID: "1234"
+    ProductClass: ilateral\SimpleBookings\Products\EventProduct
+    Quantity: 6
+  item_seven:
+    StockID: "4321"
+    ProductClass: ilateral\SimpleBookings\Products\EventProduct
+    Quantity: 4
+ilateral\SimpleBookings\Model\Booking:
+  booking_one:
+    Status: confirmed
+    Start: "2020-06-16 10:00:00"
+    End: "2020-06-16 17:00:00"
+    Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_one
+  booking_two:
+    Status: confirmed
+    Start: "2020-06-16 10:00:00"
+    End: "2020-06-16 17:00:00"
+    Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_two
+  booking_three:
+    Status: confirmed
+    Start: "2020-06-16 10:00:00"
+    End: "2020-06-16 17:00:00"
+    Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_three
+  booking_four:
+    Status: confirmed
+    Start: "2020-07-16 10:00:00"
+    End: "2020-07-16 17:00:00"
+    Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_four
+  booking_five:
+    Status: confirmed
+    Start: "2020-07-16 10:00:00"
+    End: "2020-07-16 17:00:00"
+    Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_five
+  booking_six:
+    Status: confirmed
+    Start: "2020-05-16 10:00:00"
+    End: "2020-05-16 17:00:00"
+    Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_six
+  booking_seven:
+    Status: confirmed
+    Start: "2020-06-16 10:00:00"
+    End: "2020-06-16 17:00:00"
+    Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_seven
