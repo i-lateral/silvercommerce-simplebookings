@@ -2,9 +2,11 @@ ilateral\SimpleBookings\Products\EventProduct:
   workshop_one:
     Title: "Workshop One"
     StockID: "1234"
+    BasePrice: "80"
   workshop_two:
     Title: "Workshop Two"
     StockID: "4321"
+    BasePrice: "80"
 ilateral\SimpleBookings\Model\EventDate:
   workshop_one_one:
     Start: "2020-06-16 10:00:00"
@@ -54,36 +56,50 @@ SilverCommerce\OrdersAdmin\Model\LineItem:
 ilateral\SimpleBookings\Model\Booking:
   booking_one:
     Status: confirmed
+    StockID: "1234"
     Start: "2020-06-16 10:00:00"
     End: "2020-06-16 17:00:00"
+    Spaces: 5
     Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_one
   booking_two:
     Status: confirmed
+    StockID: "1234"
     Start: "2020-06-16 10:00:00"
     End: "2020-06-16 17:00:00"
+    Spaces: 3
     Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_two
   booking_three:
     Status: confirmed
+    StockID: "1234"
     Start: "2020-06-16 10:00:00"
     End: "2020-06-16 17:00:00"
+    Spaces: 1
     Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_three
   booking_four:
     Status: confirmed
+    StockID: "1234"
     Start: "2020-07-16 10:00:00"
     End: "2020-07-16 17:00:00"
+    Spaces: 2
     Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_four
   booking_five:
     Status: confirmed
+    StockID: "1234"
     Start: "2020-07-16 10:00:00"
     End: "2020-07-16 17:00:00"
+    Spaces: 4
     Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_five
   booking_six:
     Status: confirmed
+    StockID: "1234"
     Start: "2020-05-16 10:00:00"
     End: "2020-05-16 17:00:00"
+    Spaces: 6
     Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_six
   booking_seven:
     Status: confirmed
+    StockID: "4321"
     Start: "2020-06-16 10:00:00"
     End: "2020-06-16 17:00:00"
+    Spaces: 4
     Item: =>SilverCommerce\OrdersAdmin\Model\LineItem.item_seven
