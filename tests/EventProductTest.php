@@ -69,4 +69,73 @@ class EventProductTest extends SapphireTest
         $this->assertEquals(0, $workshop_two->getPossibleSpaces('2020-04-16 10:00:00', '2020-04-16 17:00:00'));
         $this->assertEquals(0, $workshop_two->getPossibleSpaces('2020-09-16 10:00:00', '2020-09-16 17:00:00'));
     }
+
+    public function testGetBookedSpaces()
+    {
+        /** @var EventProduct */
+        $workshop_one = $this->objFromFixture(EventProduct::class, 'workshop_one');
+
+        $this->assertEquals(9, $workshop_one->getBookedSpaces('2020-06-16 10:00:00', '2020-06-16 17:00:00'));
+        $this->assertEquals(6, $workshop_one->getBookedSpaces('2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertEquals(6, $workshop_one->getBookedSpaces('2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+        $this->assertEquals(0, $workshop_one->getBookedSpaces('2020-04-16 10:00:00', '2020-04-16 17:00:00'));
+        $this->assertEquals(0, $workshop_one->getBookedSpaces('2020-08-16 10:00:00', '2020-08-16 17:00:00'));
+
+        /** @var EventProduct */
+        $workshop_two = $this->objFromFixture(EventProduct::class, 'workshop_two');
+
+        $this->assertEquals(4, $workshop_two->getBookedSpaces('2020-06-16 10:00:00', '2020-06-16 17:00:00'));
+        $this->assertEquals(0, $workshop_two->getBookedSpaces('2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertEquals(0, $workshop_two->getBookedSpaces('2020-08-16 10:00:00', '2020-08-16 17:00:00'));
+        $this->assertEquals(0, $workshop_two->getBookedSpaces('2020-04-16 10:00:00', '2020-04-16 17:00:00'));
+        $this->assertEquals(0, $workshop_two->getBookedSpaces('2020-09-16 10:00:00', '2020-09-16 17:00:00'));
+    }
+
+    public function testGetRemainingSpaces()
+    {
+        /** @var EventProduct */
+        $workshop_one = $this->objFromFixture(EventProduct::class, 'workshop_one');
+
+        $this->assertEquals(1, $workshop_one->getRemainingSpaces('2020-06-16 10:00:00', '2020-06-16 17:00:00'));
+        $this->assertEquals(9, $workshop_one->getRemainingSpaces('2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertEquals(14, $workshop_one->getRemainingSpaces('2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+        $this->assertEquals(0, $workshop_one->getRemainingSpaces('2020-04-16 10:00:00', '2020-04-16 17:00:00'));
+        $this->assertEquals(0, $workshop_one->getRemainingSpaces('2020-08-16 10:00:00', '2020-08-16 17:00:00'));
+
+        /** @var EventProduct */
+        $workshop_two = $this->objFromFixture(EventProduct::class, 'workshop_two');
+
+        $this->assertEquals(18, $workshop_two->getRemainingSpaces('2020-06-16 10:00:00', '2020-06-16 17:00:00'));
+        $this->assertEquals(18, $workshop_two->getRemainingSpaces('2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertEquals(12, $workshop_two->getRemainingSpaces('2020-08-16 10:00:00', '2020-08-16 17:00:00'));
+        $this->assertEquals(0, $workshop_two->getRemainingSpaces('2020-04-16 10:00:00', '2020-04-16 17:00:00'));
+        $this->assertEquals(0, $workshop_two->getRemainingSpaces('2020-09-16 10:00:00', '2020-09-16 17:00:00'));
+    }
+
+    public function testCanBookSpaces()
+    {
+        /** @var EventProduct */
+        $workshop_one = $this->objFromFixture(EventProduct::class, 'workshop_one');
+
+        $this->assertTrue($workshop_one->canBookSpaces(1, '2020-06-16 10:00:00', '2020-06-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(2, '2020-06-16 10:00:00', '2020-06-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(5, '2020-06-16 10:00:00', '2020-06-16 17:00:00'));
+
+        $this->assertTrue($workshop_one->canBookSpaces(1, '2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertTrue($workshop_one->canBookSpaces(5, '2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertTrue($workshop_one->canBookSpaces(9, '2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(10, '2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(15, '2020-07-16 10:00:00', '2020-07-16 17:00:00'));
+
+        $this->assertTrue($workshop_one->canBookSpaces(1, '2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+        $this->assertTrue($workshop_one->canBookSpaces(7, '2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+        $this->assertTrue($workshop_one->canBookSpaces(10, '2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+        $this->assertTrue($workshop_one->canBookSpaces(14, '2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(15, '2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(20, '2020-05-16 10:00:00', '2020-05-16 17:00:00'));
+
+        $this->assertFalse($workshop_one->canBookSpaces(1, '2020-04-16 10:00:00', '2020-04-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(5, '2020-04-16 10:00:00', '2020-04-16 17:00:00'));
+        $this->assertFalse($workshop_one->canBookSpaces(10, '2020-04-16 10:00:00', '2020-04-16 17:00:00'));
+    }
 }
