@@ -3,9 +3,12 @@
 namespace ilateral\SimpleBookings\Products;
 
 use Exception;
+use LogicException;
 use ProductController;
+use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\OptionsetField;
 use SilverStripe\ORM\ValidationResult;
+use SilverStripe\ORM\ValidationException;
 use ilateral\SimpleBookings\Products\EventProduct;
 use SilverCommerce\ShoppingCart\Forms\AddToCartForm;
 use SilverCommerce\ShoppingCart\ShoppingCartFactory;
@@ -37,6 +40,8 @@ class EventProductController extends ProductController
             ->setProductID($object->ID);
         
         $fields = $form->Fields();
+        $actions = $form->Actions();
+
         $fields->insertBefore(
             'Quantity',
             OptionsetField::create(
@@ -47,9 +52,27 @@ class EventProductController extends ProductController
             ->setForm($form)
         );
 
+        $fields->insertBefore(
+            'Quantity',
+            HeaderField::create(
+                'QuantityHeader',
+                _t(__CLASS__ . '.HowManyPeople', 'How Many People are Attending?'),
+                6
+            )
+        );
+
+        /** @var \SilverStripe\Forms\FormAction */
+        $submit_action = $actions->fieldByName('action_doAddItemToCart');
+
+        if (!empty($submit_action)) {
+            $submit_action->setTitle(_t('Bookings.BookNow', 'Book Now'));
+        }
+
         /** @var \SilverStripe\Forms\RequiredFields */
         $validator = $form->getValidator();
         $validator->addRequiredField('Date');
+
+        $this->extend('updateAddToCartForm', $form);
 
         return $form;
     }
@@ -58,7 +81,7 @@ class EventProductController extends ProductController
     {
         $classname = $data["ClassName"];
         $id = $data["ID"];
-        /** var EventProduct */
+        /** @var EventProduct */
         $object = $classname::get()->byID($id);
         $cart = ShoppingCartFactory::create();
         $customisations = [];
@@ -68,11 +91,12 @@ class EventProductController extends ProductController
             // Manually create a line item and add to cart, return any exceptions raised as a message
             try {
                 $customisations[] = [
-                    "Title" => _t(EventProduct::class . ".Date", 'Date'),
+                    "Title" => _t("Bookings.Date", 'Date'),
                     "Value" => $date->Title,
                     "BasePrice" => 0
                 ];
 
+                // Generate a line item and lock it (so booking details cannot be changed)
                 $factory = LineItemFactory::create()
                     ->setProduct($object)
                     ->setQuantity($data['Quantity'])
@@ -89,12 +113,25 @@ class EventProductController extends ProductController
                 $booking->End = $date->End;
                 $booking->write();
 
+                // Perform initial check of quantities before adding
+                // So we can cleanup anything invalid
+                if (!$factory->checkStockLevel()) {
+                    $item->delete();
+                    throw new ValidationException(
+                        _t(
+                            "Bookings.NotEnoughSpaces",
+                            "Not enough spaces available for '{title}'",
+                            ['title' => $factory->getItem()->Title]
+                        )
+                    );
+                }
+
                 $cart->addFromLineItemFactory($factory);
                 $cart->save();
 
                 $message = _t(
-                    'ShoppingCart.AddedItemToCart',
-                    'Added "{item}" to your shopping cart',
+                    'Bookings.AddedItemToCart',
+                    'Added booking "{item}" to your basket',
                     ["item" => $object->Title]
                 );
 
@@ -109,7 +146,7 @@ class EventProductController extends ProductController
             }
         } else {
             $form->sessionMessage(
-                _t("ShoppingCart.ErrorAddingToCart", "Error adding item to cart")
+                _t("Bookings.ErrorWithBooking", "Error With Booking")
             );
         }
 

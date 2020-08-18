@@ -2,9 +2,10 @@
 
 namespace ilateral\SimpleBookings\Extensions;
 
-use ilateral\SimpleBookings\Helpers\BookingHelper;
+use Exception;
 use SilverStripe\ORM\DataExtension;
 use ilateral\SimpleBookings\Model\Booking;
+use ilateral\SimpleBookings\Helpers\BookingHelper;
 
 class LineItemExtension extends DataExtension
 {
@@ -24,6 +25,32 @@ class LineItemExtension extends DataExtension
         $classes = BookingHelper::getBookableProductClasses();
 
         return in_array($product->ClassName, $classes);
+    }
+
+    /**
+     * Tap into checking of stock levels (so we can flag overbooking)
+     *
+     * @return null 
+     */
+    public function updateCheckStockLevel(&$return, $qty)
+    {
+        /** @var \SilverCommerce\OrdersAdmin\Model\LineItem */
+        $owner = $this->getOwner();
+
+        // If this is not bookable, skip
+        if (!$owner->isBookable()) {
+            return;
+        }
+
+        /** @var \SilverCommerce\CatalogueAdmin\Model\CatalogueProduct  */
+        $product = $owner->FindStockItem();
+        /** @var Booking */
+        $booking = $owner->Booking();
+
+        // If we cannot book, return false
+        if (!$product->canBookSpaces($qty, $booking->Start, $booking->End)) {
+            $return = -1;
+        }
     }
 
     /**
