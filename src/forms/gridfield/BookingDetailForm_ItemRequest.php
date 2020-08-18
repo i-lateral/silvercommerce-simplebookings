@@ -5,6 +5,7 @@ namespace ilateral\SimpleBookings\Forms\GridField;
 use ilateral\SimpleBookings\Model\Booking;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
+use SilverStripe\View\HTML;
 
 class BookingDetailForm_ItemRequest extends GridFieldDetailForm_ItemRequest
 {
@@ -26,9 +27,18 @@ class BookingDetailForm_ItemRequest extends GridFieldDetailForm_ItemRequest
 
             // Add right aligned total field
             $total = $record->obj("TotalCost");
-            $total_html = '<span class="cms-booking-total ui-corner-all ui-button-text-only">';
-            $total_html .= "<strong>Total:</strong> {$total->Nice()}";
-            $total_html .= '</span>';
+            $total_html = HTML::createTag(
+                'a',
+                [
+                    'class' => 'cms-booking-total btn btn-outline-info justify-content-end ml-auto',
+                    'href' => $record->CMSInvoiceLink()
+                ],
+                _t(
+                    __CLASS__ . ".BookingValue",
+                    "Booking Value: {total}",
+                    ['total' => $total->Nice()]
+                )
+            );
 
             $actions->push(
                 LiteralField::create(
