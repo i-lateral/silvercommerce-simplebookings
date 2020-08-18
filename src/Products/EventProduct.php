@@ -30,6 +30,17 @@ class EventProduct extends Product implements Bookable
     ];
 
     /**
+     * Overwrite default stock checking so we can overwrite with custom checks
+     * in @link \ilateral\SimpleBookings\Extensions\LineItemExtension
+     *
+     * @return int
+     */
+    public function getStockLevel()
+    {
+        return 9999;
+    }
+
+    /**
      * Return dated, filtering out any that have passed
      *
      * @return \SilverStripe\ORM\HasManyList
@@ -74,8 +85,47 @@ class EventProduct extends Product implements Bookable
      */
     public function getBookedSpaces(string $start, string $end)
     {
-        $helper = BookingHelper::create($this->Start, $this->End, $this->Event());
+        $helper = BookingHelper::create($start, $end, $this);
         return $helper->getTotalBookedSpaces();
+    }
+
+    /**
+     * Get the total number of spaces allowed within a date range
+     *
+     * @param string $start
+     * @param string $end
+     *
+     * @return int
+     */
+    public function getRemainingSpaces(string $start, string $end)
+    {
+        $helper = BookingHelper::create($start, $end, $this);
+        $dates = $this->Dates()->where($helper->getWhereFilter());
+        /** @var EventDate */
+        $date = $dates->first();
+
+        if (!empty($date)) {
+            return $date->getRemainingSpaces();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Can the provided number of spaces be booked within this date range
+     *
+     * @param int    $quantity
+     * @param string $start
+     * @param string $end
+     *
+     * @return bool
+     */
+    public function canBookSpaces(int $quantity, string $start, string $end)
+    {
+        $possible = $this->getRemainingSpaces($start, $end);
+        $remaining = $possible - $quantity;
+
+        return !($remaining < 0);
     }
 
     /**
