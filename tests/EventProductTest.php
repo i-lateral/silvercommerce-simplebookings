@@ -1,6 +1,6 @@
 <?php
 
-namespace ilateral\SimpleBookings\Tests;
+namespace ilateral\SimpleBookings\Tests\;
 
 use ilateral\SimpleBookings\Products\EventProduct;
 use SilverStripe\Dev\SapphireTest;
