@@ -238,7 +238,7 @@ class Booking extends DataObject implements PermissionProvider
      *
      * @return string
      */
-    public function CMSOrderLink()
+    public function CMSInvoiceLink()
     {
         $invoice = $this->getInvoice();
         if ($invoice->exists()) {
