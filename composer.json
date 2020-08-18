@@ -30,7 +30,7 @@
     "autoload": {
         "psr-4": {
             "ilateral\\SimpleBookings\\": "src/",
-            "ilateral\\SimpleBookings\\Tests": "tests/"
+            "ilateral\\SimpleBookings\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev"
