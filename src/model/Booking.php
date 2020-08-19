@@ -10,6 +10,7 @@ use SilverCommerce\OrdersAdmin\Model\Invoice;
 use SilverStripe\Security\PermissionProvider;
 use ilateral\SimpleBookings\Admin\BookingAdmin;
 use ilateral\SimpleBookings\Helpers\BookingHelper;
+use ilateral\SimpleBookings\Search\BookingSearchContext;
 use SilverCommerce\CatalogueAdmin\Model\CatalogueProduct;
 use SilverCommerce\ContactAdmin\Model\Contact;
 use SilverCommerce\OrdersAdmin\Admin\OrderAdmin;
@@ -83,6 +84,19 @@ class Booking extends DataObject implements PermissionProvider
         'Status'
     ];
 
+    /**
+     * Default search fields, additional date fields added via search context
+     *
+     * @var array
+     * @config
+     */
+    private static $searchable_fields = [
+        'Customer.FirstName',
+        'Customer.Surname',
+        'Customer.Email',
+        'Status'
+    ];
+
     private static $defaults = [
         "Status"      => 'pending'
     ];
@@ -90,6 +104,8 @@ class Booking extends DataObject implements PermissionProvider
     private static $cascade_deletes = [
         'Item'
     ];
+
+    private static $default_sort = 'Start DESC';
 
     /**
      * Use the base title for the original bookable product
@@ -259,31 +275,6 @@ class Booking extends DataObject implements PermissionProvider
     }
 
     /**
-     * Determine if any of these products are overbooked
-     *
-     * @return boolean
-     */
-    public function getOverBooked()
-    {
-        $helper = BookingHelper::create($this->Start, $this->End, $this->getBaseProduct());
-        $overbooked = false;
-        $booked_spaces = $helper->getTotalBookedSpaces();
-
-        // First get the number of places available for this booking
-
-        // Then get the currently booked resources for this booking
-
-        // Finaly tot up the numbers
-        /*foreach ($this->Resources() as $product) {
-            if ($product->getPlacesRemaining($product->Start, $product->End) < 0) {
-                $overbooked = true;
-            }
-        }*/
-
-        return $overbooked;
-    }
-
-    /**
      * Get the total cost of this booking, based on all products added
      * and the total number of days
      *
@@ -349,6 +340,20 @@ class Booking extends DataObject implements PermissionProvider
         );
         
         return parent::getCMSFields();
+    }
+
+    /**
+     * Load custom search context to allow for more complex date based filtering
+     * 
+     * @return BookingSearchContext
+     */
+    public function getDefaultSearchContext()
+    {
+        return BookingSearchContext::create(
+            static::class,
+            $this->scaffoldSearchFields(),
+            $this->defaultSearchFilters()
+        );
     }
 
     /**

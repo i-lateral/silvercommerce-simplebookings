@@ -4,13 +4,15 @@ namespace ilateral\SimpleBookings\Admin;
 
 use DateTime;
 use SilverStripe\Admin\ModelAdmin;
+use SilverStripe\Dev\CsvBulkLoader;
+use SilverStripe\Core\Config\Config;
 use ilateral\SimpleBookings\Model\Booking;
+use ilateral\SimpleBookings\Helpers\BookingHelper;
+use ilateral\SimpleBookings\Products\EventProduct;
 use ilateral\SimpleBookings\Model\ResourceAllocation;
 use SilverStripe\Forms\GridField\GridFieldDetailForm;
 use SilverStripe\GridFieldAddOns\GridFieldRecordHighlighter;
-use ilateral\SimpleBookings\Forms\GridField\BookingDetailForm;
 use ilateral\SimpleBookings\Forms\GridField\BookingDetailForm_ItemRequest;
-use SilverStripe\Dev\CsvBulkLoader;
 
 class BookingAdmin extends ModelAdmin
 {
@@ -54,21 +56,16 @@ class BookingAdmin extends ModelAdmin
                 'patterns' => [
                     '0' => [
                         'status' => 'alert',
-                        'message' => _t("SimpleBookings.OverBookedAlert", 'This is overbooked'),
+                        'message' => _t("Bookings.OverBooked", 'Over Booked'),
                     ]
                 ]
             ]
         ];
     }
 
-    public function getEditForm($id = null, $fields = null)
+    protected function getGridFieldConfig()
     {
-        $form = parent::getEditForm($id, $fields);
-        $fields = $form->Fields();
-
-        /** @var \SilverStripe\Forms\GridField\GridField */
-        $gridField = $form->Fields()->fieldByName($this->sanitiseClassName($this->modelClass));
-        $config = $gridField->getConfig();
+        $config = parent::getGridFieldConfig();
 
         if ($this->modelClass == Booking::class) {
             /** @var GridFieldDetailForm */
@@ -81,49 +78,29 @@ class BookingAdmin extends ModelAdmin
             $config->addComponent(new GridFieldRecordHighlighter($this->getBookingAlerts()));
         }
 
-        $this->extend('updateEditForm', $form);
+        $this->extend('updateBookingGridFieldConfig', $form);
 
-        return $form;
+        return $config;
     }
 
+    /**
+     * By default, bookings should  only display confirmed (unless we filter them) and
+     * only the next 30 days
+     *
+     * @return \SilverStripe\ORM\DataList
+     */
     public function getList()
     {
+        // Bookings get handled via Search Context results
+        if ($this->modelClass == Booking::class) {
+            /** @var Booking */
+            $context = singleton(Booking::class)->getDefaultSearchContext();
+            return $context->getResults([]);
+        }
+
         $list = parent::getList();
 
-        $filter = [];
-        
-        // Perform complex filtering
-        if ($this->modelClass == Booking::class) {
-            $query = $this->getRequest()->getVar("q");
-            // If a start date and end date are set, filter all dates
-            /*if (is_array($query)) {
-                $start_object = new Date();
-                $end_object = new Date();
-                $start_date = null;
-                $end_date = null;
-
-                if (array_key_exists("StartDate", $query) && $query["StartDate"]) {
-                    $start_object->setValue($query["StartDate"]);
-                    $start_date = new DateTime($start_object->getValue() . " " . $this->config()->default_start_time);
-                }
-
-                if (array_key_exists("EndDate", $query) && $query["EndDate"]) {
-                    $end_object->setValue($query["EndDate"]);
-                    $end_date = new DateTime($end_object->getValue() . " " . $this->config()->default_end_time);
-                } elseif ($start_date) {
-                    $end_date = new DateTime($start_object->getValue() . " " . $this->config()->default_end_time);
-                }
-
-                // If both dates are the same, we can assume that it is a one day booking
-                if ($start_date && $end_date) {
-                    $list = $list
-                        ->exclude("End:LessThan", $start_date->format("Y-m-d H:i:s"))
-                        ->exclude("Start:GreaterThan", $end_date->format("Y-m-d H:i:s"));
-                }
-            }*/
-        }
-        
-        $this->extend('updateList', $list);
+        $this->extend('updateBookingAdminList', $list);
 
         return $list;
     }
