@@ -63,11 +63,24 @@ class BookingAdmin extends ModelAdmin
         ];
     }
 
-    protected function getGridFieldConfig()
+    /**
+     * Update the default edit form
+     *
+     * @return \SilverStripe\Forms\Form
+     */
+    public function getEditForm($id = null, $fields = null)
     {
-        $config = parent::getGridFieldConfig();
+        $form = parent::getEditForm($id, $fields);
+        $config = null;
+        $grid_field = $form
+            ->Fields()
+            ->dataFieldByName($this->sanitiseClassName($this->modelClass));
 
-        if ($this->modelClass == Booking::class) {
+        if (!empty($grid_field)) {
+            $config = $grid_field->getConfig();
+        }
+
+        if ($this->modelClass == Booking::class && !empty($config)) {
             /** @var GridFieldDetailForm */
             $detail_form = $config
                 ->getComponentByType(GridFieldDetailForm::class);
@@ -78,9 +91,9 @@ class BookingAdmin extends ModelAdmin
             $config->addComponent(new GridFieldRecordHighlighter($this->getBookingAlerts()));
         }
 
-        $this->extend('updateBookingGridFieldConfig', $form);
+        $this->extend('updateBookingAdminEditForm', $form);
 
-        return $config;
+        return $form;
     }
 
     /**
