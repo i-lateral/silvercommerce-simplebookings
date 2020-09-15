@@ -3,6 +3,7 @@
 namespace ilateral\SimpleBookings\Products;
 
 use Exception;
+use ilateral\SimpleBookings\Forms\DateOptionsField;
 use LogicException;
 use ProductController;
 use SilverStripe\Forms\HeaderField;
@@ -44,7 +45,7 @@ class EventProductController extends ProductController
 
         $fields->insertBefore(
             'Quantity',
-            OptionsetField::create(
+            DateOptionsField::create(
                 'Date',
                 _t(__CLASS__ . '.SelectDate', 'Select a date')
             )->setSource($object->getCurrentDates()->map())
