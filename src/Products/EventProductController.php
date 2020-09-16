@@ -99,6 +99,7 @@ class EventProductController extends ProductController
 
                 // Generate a line item and lock it (so booking details cannot be changed)
                 $factory = LineItemFactory::create()
+                    ->setProductDeliverableParam('DeliverTicket')
                     ->setProduct($object)
                     ->setQuantity($data['Quantity'])
                     ->setCustomisations($customisations)

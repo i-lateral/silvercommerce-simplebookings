@@ -6,6 +6,7 @@ use ilateral\SimpleBookings\Helpers\BookingHelper;
 use ilateral\SimpleBookings\Interfaces\Bookable;
 use Product;
 use ilateral\SimpleBookings\Model\EventDate;
+use SilverStripe\Forms\CheckboxField;
 use SilverStripe\ORM\FieldType\DBDatetime;
 
 /**
@@ -25,9 +26,32 @@ class EventProduct extends Product implements Bookable
 
     private static $description = "A one off event that can be bookeed across multiple dates";
 
+    private static $db = [
+        'DeliverTicket' => 'Boolean'
+    ];
+
     private static $has_many = [
         'Dates' => EventDate::class
     ];
+
+    private static $defaults = [
+        'DeliverTicket' => false
+    ];
+
+    public function getCMSFields()
+    {
+        $fields = parent::getCMSFields();
+
+        $fields->addFieldToTab(
+            'Root.Settings',
+            CheckboxField::create(
+                'DeliverTicket',
+                "Does a 'ticket' or similar item need to be delivered?"
+            )
+        );
+
+        return $fields;
+    }
 
     /**
      * Overwrite default stock checking so we can overwrite with custom checks
