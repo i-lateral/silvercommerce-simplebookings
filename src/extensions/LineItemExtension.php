@@ -22,6 +22,12 @@ class LineItemExtension extends DataExtension
     {
         $owner = $this->getOwner();
         $product = $owner->FindStockItem();
+
+        // If product data is not available, it should not be bookable
+        if (empty($product)) {
+            return false;
+        }
+
         $classes = BookingHelper::getBookableProductClasses();
 
         return in_array($product->ClassName, $classes);
