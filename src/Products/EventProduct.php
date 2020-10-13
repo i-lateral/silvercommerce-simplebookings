@@ -23,7 +23,7 @@ class EventProduct extends Product implements Bookable
 
     private static $plural_name = 'Events';
 
-    private static $description = "A one off event that can be bookeed across multiple dates";
+    private static $description = "A one off event that can be booked across multiple dates";
 
     private static $has_many = [
         'Dates' => EventDate::class
