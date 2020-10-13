@@ -17,6 +17,7 @@ use SilverCommerce\OrdersAdmin\Admin\OrderAdmin;
 use SilverCommerce\OrdersAdmin\Factory\LineItemFactory;
 use SilverCommerce\OrdersAdmin\Model\LineItem;
 use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Security\Security;
 
@@ -335,6 +336,12 @@ class Booking extends DataObject implements PermissionProvider
                     ReadonlyField::create('SpacesRemaining', $this->fieldLabel('SpacesRemaining'))
                         ->setValue($this->SpacesRemaining),
                     'Spaces'
+                );
+
+                // Hide Item Field (not needed)
+                $fields->replaceField(
+                    'ItemID',
+                    HiddenField::create('ItemID')
                 );
             }
         );
