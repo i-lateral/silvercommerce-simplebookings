@@ -54,7 +54,7 @@ class LineItemExtension extends DataExtension
         $booking = $owner->Booking();
 
         // If the booking is invalid return a negative
-        if (empty($booking) || !$booking->exists()) {
+        if (empty($booking) || !$booking->exists() || empty($booking->Start) || empty($booking->End)) {
             return -1;
         }
 
