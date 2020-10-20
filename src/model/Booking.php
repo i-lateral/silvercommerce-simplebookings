@@ -553,7 +553,7 @@ class Booking extends DataObject implements PermissionProvider
 
         // Finally, if an estimate does does not exist (linked to the item), create
         if ($line_item->exists() && !$line_item->Parent()->exists()) {
-            $order_factory = OrderFactory::create()
+            OrderFactory::create()
                 ->addFromLineItemFactory($item_factory)
                 ->write();
         }
