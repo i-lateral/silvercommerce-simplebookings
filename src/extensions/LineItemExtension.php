@@ -53,6 +53,11 @@ class LineItemExtension extends DataExtension
         /** @var Booking */
         $booking = $owner->Booking();
 
+        // If the booking is invalid return a negative
+        if (empty($booking) || !$booking->exists()) {
+            return -1;
+        }
+
         // If we cannot book, return false
         if (!$product->canBookSpaces($qty, $booking->Start, $booking->End)) {
             $return = -1;
