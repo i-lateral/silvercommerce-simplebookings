@@ -4,22 +4,24 @@ namespace ilateral\SimpleBookings\Model;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
+use SilverStripe\Forms\HiddenField;
+use SilverStripe\Security\Security;
 use SilverStripe\Control\Controller;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Security\Permission;
 use SilverCommerce\OrdersAdmin\Model\Invoice;
+use SilverShop\HasOneField\HasOneButtonField;
 use SilverStripe\Security\PermissionProvider;
+use SilverCommerce\ContactAdmin\Model\Contact;
+use SilverCommerce\OrdersAdmin\Model\LineItem;
 use ilateral\SimpleBookings\Admin\BookingAdmin;
+use SilverCommerce\OrdersAdmin\Admin\OrderAdmin;
 use ilateral\SimpleBookings\Helpers\BookingHelper;
+use SilverCommerce\OrdersAdmin\Factory\LineItemFactory;
 use ilateral\SimpleBookings\Search\BookingSearchContext;
 use SilverCommerce\CatalogueAdmin\Model\CatalogueProduct;
-use SilverCommerce\ContactAdmin\Model\Contact;
-use SilverCommerce\OrdersAdmin\Admin\OrderAdmin;
-use SilverCommerce\OrdersAdmin\Factory\LineItemFactory;
-use SilverCommerce\OrdersAdmin\Model\LineItem;
-use SilverStripe\Forms\DropdownField;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\Security\Security;
+use SilverCommerce\OrdersAdmin\Factory\OrderFactory;
 
 /**
  * A single booking that is linked to an invoice. Each lineitem on the Invoice constitutes a resource on this booking
@@ -262,10 +264,10 @@ class Booking extends DataObject implements PermissionProvider
             return Controller::join_links(
                 "admin",
                 OrderAdmin::config()->url_segment,
-                $invoice->ClassName,
+                $this->sanitiseClassName($invoice->ClassName),
                 "EditForm",
                 "field",
-                $invoice->ClassName,
+                $this->sanitiseClassName($invoice->ClassName),
                 "item",
                 $invoice->ID,
                 "view"
@@ -338,6 +340,12 @@ class Booking extends DataObject implements PermissionProvider
                     'Spaces'
                 );
 
+                // Switch custom relation to a hasone field
+                $fields->replaceField(
+                    'CustomerID',
+                    HasOneButtonField::create($this, 'Customer')
+                ); 
+
                 // Hide Item Field (not needed)
                 $fields->replaceField(
                     'ItemID',
@@ -361,6 +369,17 @@ class Booking extends DataObject implements PermissionProvider
             $this->scaffoldSearchFields(),
             $this->defaultSearchFilters()
         );
+    }
+
+    /**
+     * Sanitise a model class' name for inclusion in a link
+     *
+     * @param string $class
+     * @return string
+     */
+    protected function sanitiseClassName($class)
+    {
+        return str_replace('\\', '-', $class);
     }
 
     /**
@@ -510,16 +529,19 @@ class Booking extends DataObject implements PermissionProvider
         parent::onAfterWrite();
 
         $line_item = $this->Item();
+        $item_factory = LineItemFactory::create();
 
         // Create and attach a line item
         if (!$line_item->exists()) {
-            $factory = LineItemFactory::create()
+            $item_factory
                 ->setProduct($this->getBaseProduct())
                 ->makeItem()
                 ->write();
-            $line_item = $factory->getItem();
+            $line_item = $item_factory->getItem();
             $this->ItemID = $line_item->ID;
             $this->write();
+        } else {
+            $item_factory->setItem($line_item);
         }
 
         // ensure details are copied to line item (if needed)
@@ -527,6 +549,13 @@ class Booking extends DataObject implements PermissionProvider
             $line_item->StockID = $this->StockID;
             $line_item->Quantity = $this->Spaces;
             $line_item->write();
+        }
+
+        // Finally, if an estimate does does not exist (linked to the item), create
+        if ($line_item->exists() && !$line_item->Parent()->exists()) {
+            $order_factory = OrderFactory::create()
+                ->addFromLineItemFactory($item_factory)
+                ->write();
         }
     }
 }
