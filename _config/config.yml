@@ -3,9 +3,9 @@ Name: simplebookingconfig
 ---
 
 # Extensions
-SilverCommerce\OrdersAdmin\Model\Invoice:
+SilverCommerce\OrdersAdmin\Model\Estimate:
   extensions:
-    - ilateral\SimpleBookings\Extensions\InvoiceExtension
+    - ilateral\SimpleBookings\Extensions\EstimateExtension
 SilverCommerce\OrdersAdmin\Model\LineItem:
   extensions:
     - ilateral\SimpleBookings\Extensions\LineItemExtension
