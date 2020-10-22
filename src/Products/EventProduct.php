@@ -25,8 +25,16 @@ class EventProduct extends Product implements Bookable
 
     private static $description = "A one off event that can be booked across multiple dates";
 
+    private static $db = [
+        'Deliverable' => 'Boolean'
+    ];
+
     private static $has_many = [
         'Dates' => EventDate::class
+    ];
+
+    private static $field_labels = [
+        'Deliverable' => 'Is there a deliverable component?'
     ];
 
     /**
@@ -143,5 +151,25 @@ class EventProduct extends Product implements Bookable
         }
 
         return $disabled;
+    }
+
+    public function getCMSFields()
+    {
+        $self = $this;
+
+        $this->beforeUpdateCMSFields(function ($fields) use ($self) {
+            // Move deliverable field to settings
+            $deliverable = $fields->dataFieldByName('Deliverable');
+
+            if (!empty($deliverable)) {
+                $fields->removeByName('Deliverable');
+                $fields->addFieldToTab(
+                    'Root.Settings',
+                    $deliverable
+                );
+            }
+        });
+
+        return parent::getCMSFields();
     }
 }
