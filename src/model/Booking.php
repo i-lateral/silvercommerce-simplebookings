@@ -49,7 +49,8 @@ class Booking extends DataObject implements PermissionProvider
         'Status'        => 'Varchar',
         'Start'         => 'Datetime',
         'End'           => 'Datetime',
-        'Spaces'        => 'Int'
+        'Spaces'        => 'Int',
+        'SpecialInstructions' => 'Text'
     ];
 
     private static $has_one = [
@@ -84,6 +85,7 @@ class Booking extends DataObject implements PermissionProvider
         'Customer.Surname',
         'Customer.Email',
         'Invoice.FullRef',
+        'SpecialInstructions',
         'Status'
     ];
 
@@ -521,10 +523,26 @@ class Booking extends DataObject implements PermissionProvider
     }
 
     /**
+     * Ensure any special instructions are transfered to a linked booking
+     *
+     * @return null
+     */
+    protected function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+
+        $invoice = $this->getInvoice();
+
+        if ($this->SpecialInstructions != $invoice->SpecialInstructions) {
+            $this->SpecialInstructions = $invoice->SpecialInstructions;
+        }
+    }
+
+    /**
      * Each line item that is bookable needs a relevent booking
      *
      */
-    public function onAfterWrite()
+    protected function onAfterWrite()
     {
         parent::onAfterWrite();
 
