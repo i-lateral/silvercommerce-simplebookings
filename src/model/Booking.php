@@ -272,7 +272,7 @@ class Booking extends DataObject implements PermissionProvider
                 $this->sanitiseClassName($invoice->ClassName),
                 "item",
                 $invoice->ID,
-                "view"
+                "edit"
             );
         }
 
