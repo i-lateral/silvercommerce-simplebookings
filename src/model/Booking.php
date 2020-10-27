@@ -18,15 +18,26 @@ use SilverCommerce\OrdersAdmin\Model\LineItem;
 use ilateral\SimpleBookings\Admin\BookingAdmin;
 use SilverCommerce\OrdersAdmin\Admin\OrderAdmin;
 use ilateral\SimpleBookings\Helpers\BookingHelper;
+use ilateral\SimpleBookings\Products\EventProduct;
 use SilverCommerce\OrdersAdmin\Factory\LineItemFactory;
 use ilateral\SimpleBookings\Search\BookingSearchContext;
+use Sheadawson\DependentDropdown\Forms\DependentDropdownField;
 use SilverCommerce\CatalogueAdmin\Model\CatalogueProduct;
 use SilverCommerce\OrdersAdmin\Factory\OrderFactory;
 
 /**
  * A single booking that is linked to an invoice. Each lineitem on the Invoice constitutes a resource on this booking
  *
- * @method LineItem Item
+ * @param string StockID
+ * @param string Status
+ * @param string Start
+ * @param string End
+ * @param int    Spaces
+ * @param string SpecialInstructions
+ *
+ * @method LineItem  Item
+ * @method Contact   Customer
+ * @method EventDate EventDate
  */
 class Booking extends DataObject implements PermissionProvider
 {
@@ -55,7 +66,8 @@ class Booking extends DataObject implements PermissionProvider
 
     private static $has_one = [
         'Customer' => Contact::class,
-        'Item' => LineItem::class
+        'Item' => LineItem::class,
+        'EventDate' => EventDate::class
     ];
 
     private static $casting = [
@@ -200,13 +212,19 @@ class Booking extends DataObject implements PermissionProvider
 
     /**
      * Get the product this booking was made against
+     * (also accepts optional stock ID)
+     *
+     * 
      *
      * @return CatalogueProduct
      */
-    public function getBaseProduct()
+    public function getBaseProduct($stock_id = null)
     {
+        if (empty($stock_id)) {
+            $stock_id = $this->StockID;
+        }
         $product = BookingHelper::getBookableProducts()
-            ->filter('StockID', $this->StockID)
+            ->filter('StockID', $stock_id)
             ->first();
 
         if (empty($product)) {
@@ -321,13 +339,29 @@ class Booking extends DataObject implements PermissionProvider
         $this->beforeUpdateCMSFields(
             function ($fields) use ($self) {
                 $products = BookingHelper::getBookableProducts();
+                $self = $this;
+
+                // Add data source for event dates (if the product is an event)
+                $event_dates = function($value) use ($self) {
+                    /** @var EventProduct */
+                    $product = $self->getBaseProduct($value);
+
+                    if (!is_a($product, EventProduct::class)) {
+                        return [];
+                    }
+
+                    return $product->Dates()->map();
+                };
 
                 // Swap out status and stock ID for dropdowns
                 $fields->addFieldsToTab(
                     'Root.Main',
                     [
-                        DropdownField::create('StockID', $this->fieldLabel('StockID'))
+                        $stock_field = DropdownField::create('StockID', $this->fieldLabel('StockID'))
                             ->setSource($products->map('StockID', 'Title')),
+                        DependentDropdownField::create('EventDateID', $this->fieldLabel('EventDate'), $event_dates)
+                            ->setDepends($stock_field)
+                            ->setEmptyString(_t(__CLASS__ . '.SelectDate', 'Select the date of the event (if relevent)')),
                         DropdownField::create('Status', $this->fieldLabel('Status'))
                             ->setSource($self->config()->statuses),
                     ],
@@ -353,6 +387,17 @@ class Booking extends DataObject implements PermissionProvider
                     'ItemID',
                     HiddenField::create('ItemID')
                 );
+
+                // Add descriptions to start/end fields
+                $message = _t(__CLASS__ . '.StartEndDesctiption', 'Do not set if selecting an "Event Date"');
+
+                $fields
+                    ->dataFieldByName('Start')
+                    ->setDescription($message);
+
+                $fields
+                    ->dataFieldByName('End')
+                    ->setDescription($message);
             }
         );
         
@@ -533,8 +578,16 @@ class Booking extends DataObject implements PermissionProvider
 
         $invoice = $this->getInvoice();
 
-        if ($this->SpecialInstructions != $invoice->SpecialInstructions) {
+        // If special instructions are on the estimate/invoic, but not on the booking, transfer them
+        if (!empty($invoice->SpecialInstructions) && $this->SpecialInstructions != $invoice->SpecialInstructions) {
             $this->SpecialInstructions = $invoice->SpecialInstructions;
+        }
+
+        // If we have selected an event date, push the start and end to the booking
+        $event = $this->EventDate();
+        if ($event->exists()) {
+            $this->Start = $event->Start;
+            $this->End = $event->End; 
         }
     }
 
@@ -569,11 +622,22 @@ class Booking extends DataObject implements PermissionProvider
             $line_item->write();
         }
 
-        // Finally, if an estimate does does not exist (linked to the item), create
+        // If an estimate does does not exist (linked to the item), create
         if ($line_item->exists() && !$line_item->Parent()->exists()) {
             OrderFactory::create()
+                ->setCustomer($this->Customer())
                 ->addFromLineItemFactory($item_factory)
                 ->write();
+        }
+
+        // Finally, if there is a customer set on the booking, but not on the Estimate/Invoice
+        // set it now.
+        $invoice = $line_item->Parent();
+
+        // If special instructions are on the estimate/invoic, but not on the booking, transfer them
+        if ($invoice->exists() && $this->Customer()->exists() && !$invoice->Customer()->exists()) {
+            $invoice->CustomerID = $this->CustomerID;
+            $invoice->write();
         }
     }
 }
