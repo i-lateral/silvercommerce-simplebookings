@@ -24,6 +24,7 @@ use ilateral\SimpleBookings\Search\BookingSearchContext;
 use Sheadawson\DependentDropdown\Forms\DependentDropdownField;
 use SilverCommerce\CatalogueAdmin\Model\CatalogueProduct;
 use SilverCommerce\OrdersAdmin\Factory\OrderFactory;
+use SilverCommerce\OrdersAdmin\Model\Estimate;
 
 /**
  * A single booking that is linked to an invoice. Each lineitem on the Invoice constitutes a resource on this booking
@@ -638,6 +639,14 @@ class Booking extends DataObject implements PermissionProvider
         if ($invoice->exists() && $this->Customer()->exists() && !$invoice->Customer()->exists()) {
             $invoice->CustomerID = $this->CustomerID;
             $invoice->write();
+        }
+
+        // If we have marked a booking as confirmeed, convert the attached estimate to an invoice
+        if ($this->isChanged('Status') && $this->isConfirmed()) {
+            $invoice = $this->getInvoice();
+            if (is_a($invoice, Estimate::class)) {
+                $invoice->convertToInvoice();
+            }
         }
     }
 }
