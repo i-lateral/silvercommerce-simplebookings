@@ -50,11 +50,13 @@ class EventDate extends DataObject
      */
     public function getTitle()
     {
-        $date = $this->dbObject('Start')->Nice();
+        $start = $this->dbObject('Start')->Nice();
+        $end = $this->dbObject('End')->Nice();
+        $title = $start . " - " . $end;
 
-        $this->extend('updateTitle', $date);
+        $this->extend('updateTitle', $title);
 
-        return $date;
+        return $title;
     }
 
     /**
