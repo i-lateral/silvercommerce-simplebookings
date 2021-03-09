@@ -4,18 +4,31 @@ namespace ilateral\SimpleBookings\Extensions;
 
 use ilateral\SimpleBookings\Model\Booking;
 use SilverCommerce\OrdersAdmin\Model\Invoice;
+use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataExtension;
 
 class EstimateExtension extends DataExtension
 {
     /**
      * Get a list of bookings from the current estimate (based on the attached products)
+     *
+     * @return DataList
      */
     public function getBookings()
     {
+        /**
+         * @var \SilverCommerce\OrdersAdmin\Model\Estimate
+         */
+        $owner = $this->getOwner();
+        $item_ids = $owner->Items()->column('ID');
+
+        if (count($item_ids) == 0) {
+            return ArrayList::create();
+        }
+
         return Booking::get()->filter(
             'ItemID',
-            $this->getOwner()->Items()->column('ID')
+            $this->getOwner()
         );
     }
 
