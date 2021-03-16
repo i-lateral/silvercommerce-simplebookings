@@ -607,6 +607,7 @@ class Booking extends DataObject implements PermissionProvider
         if (!$line_item->exists()) {
             $item_factory
                 ->setProduct($this->getBaseProduct())
+                ->setQuantity($this->Spaces)
                 ->makeItem()
                 ->write();
             $line_item = $item_factory->getItem();
