@@ -28,7 +28,7 @@ class EstimateExtension extends DataExtension
 
         return Booking::get()->filter(
             'ItemID',
-            $this->getOwner()
+            $item_ids
         );
     }
 
