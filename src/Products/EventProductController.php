@@ -84,25 +84,25 @@ class EventProductController extends ProductController
         /** @var EventProduct */
         $object = $classname::get()->byID($id);
         $cart = ShoppingCartFactory::create();
-        $customisations = [];
         $date = $object->getCurrentDates()->byID($data['Date']);
 
         if (!empty($object) && !empty($date)) {
-            // Manually create a line item and add to cart, return any exceptions raised as a message
+            // Manually create a line item and add to cart,
+            // return any exceptions raised as a message
             try {
-                $customisations[] = [
-                    "Title" => _t("Bookings.Date", 'Date'),
-                    "Value" => $date->Title,
-                    "BasePrice" => 0
-                ];
-
-                // Generate a line item and lock it (so booking details cannot be changed)
+                // Generate a line item and lock it (so
+                // booking details cannot be changed)
                 $factory = LineItemFactory::create()
                     ->setProduct($object)
                     ->setQuantity($data['Quantity'])
-                    ->setCustomisations($customisations)
                     ->makeItem()
                     ->write();
+
+                $factory->customise(
+                    _t("Bookings.Date", 'Date'),
+                    $date->Title
+                );
+                $factory->write();
 
                 // Now get and update the assotiated booking data
                 $item = $factory->getItem();
