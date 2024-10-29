@@ -94,6 +94,7 @@ class EventProductController extends ProductController
                 // booking details cannot be changed)
                 $factory = LineItemFactory::create()
                     ->setProduct($object)
+                    ->setDeliverable((bool)$object->Deliverable)
                     ->setQuantity($data['Quantity'])
                     ->makeItem()
                     ->write();
